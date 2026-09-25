@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { sampleListings } from "@/lib/listings";
+import { desc, eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { listings } from "@/lib/db/schema";
+import { getCurrentDealer } from "@/lib/db/dealer";
 
 export const metadata: Metadata = {
   title: "Overview",
@@ -45,9 +48,17 @@ const stats = (posted: number, drafts: number, total: number) => [
   },
 ];
 
-export default function DashboardOverview() {
-  const posted = sampleListings.filter((l) => l.status === "posted").length;
-  const drafts = sampleListings.filter((l) => l.status === "draft").length;
+export default async function DashboardOverview() {
+  const { dealer } = await getCurrentDealer();
+  const rows = await db
+    .select()
+    .from(listings)
+    .where(eq(listings.dealerId, dealer.id))
+    .orderBy(desc(listings.createdAt));
+
+  const posted = rows.filter((l) => l.status === "posted").length;
+  const drafts = rows.filter((l) => l.status === "draft").length;
+  const recent = rows.slice(0, 5);
 
   return (
     <div>
@@ -55,8 +66,7 @@ export default function DashboardOverview() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
           <p className="mt-1 text-sm text-zinc-600">
-            Placeholder numbers — will reflect real inventory once this is
-            connected to a backend.
+            Your real inventory for {dealer.name}.
           </p>
         </div>
         <Link
@@ -78,7 +88,7 @@ export default function DashboardOverview() {
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        {stats(posted, drafts, sampleListings.length).map((stat) => (
+        {stats(posted, drafts, rows.length).map((stat) => (
           <div
             key={stat.label}
             className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
@@ -109,8 +119,17 @@ export default function DashboardOverview() {
         <p className="mt-1 text-sm text-zinc-600">
           A quick look at what&apos;s in your inventory right now.
         </p>
+        {recent.length === 0 && (
+          <p className="mt-4 rounded-xl border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-500">
+            No cars yet —{" "}
+            <Link href="/dashboard/listings/new" className="text-indigo-600 hover:text-indigo-700">
+              add your first one
+            </Link>
+            .
+          </p>
+        )}
         <div className="mt-4 divide-y divide-zinc-100">
-          {sampleListings.map((listing) => (
+          {recent.map((listing) => (
             <div
               key={listing.id}
               className="flex items-center justify-between gap-4 py-3"
