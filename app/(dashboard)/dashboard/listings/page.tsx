@@ -1,24 +1,30 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { sampleListings } from "@/lib/listings";
-import { platforms } from "@/lib/platforms";
+import { desc, eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { listings } from "@/lib/db/schema";
+import { getCurrentDealer } from "@/lib/db/dealer";
+import { ListingRowActions } from "@/components/dashboard/ListingRowActions";
 
 export const metadata: Metadata = {
   title: "Listings",
 };
 
-function platformName(id: string) {
-  return platforms.find((p) => p.id === id)?.name ?? id;
-}
+export default async function ListingsPage() {
+  const { dealer } = await getCurrentDealer();
+  const rows = await db
+    .select()
+    .from(listings)
+    .where(eq(listings.dealerId, dealer.id))
+    .orderBy(desc(listings.createdAt));
 
-export default function ListingsPage() {
   return (
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Listings</h1>
           <p className="mt-1 text-sm text-zinc-600">
-            {sampleListings.length} cars in your inventory.
+            {rows.length} car{rows.length === 1 ? "" : "s"} in your inventory.
           </p>
         </div>
         <Link
@@ -39,6 +45,19 @@ export default function ListingsPage() {
         </Link>
       </div>
 
+      {rows.length === 0 ? (
+        <div className="mt-6 rounded-2xl border border-dashed border-zinc-200 p-10 text-center">
+          <p className="text-sm text-zinc-500">
+            No cars in your inventory yet.
+          </p>
+          <Link
+            href="/dashboard/listings/new"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          >
+            Add your first car
+          </Link>
+        </div>
+      ) : (
       <div className="mt-6 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -48,11 +67,11 @@ export default function ListingsPage() {
                 <th className="px-5 py-3 font-medium">Price</th>
                 <th className="px-5 py-3 font-medium">Mileage</th>
                 <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3 font-medium">Platforms</th>
+                <th className="px-5 py-3 font-medium"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {sampleListings.map((listing) => (
+              {rows.map((listing) => (
                 <tr
                   key={listing.id}
                   className="transition-colors hover:bg-zinc-50"
@@ -93,20 +112,7 @@ export default function ListingsPage() {
                     </span>
                   </td>
                   <td className="px-5 py-3.5 whitespace-nowrap">
-                    {listing.platforms.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {listing.platforms.map((id) => (
-                          <span
-                            key={id}
-                            className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600"
-                          >
-                            {platformName(id)}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-zinc-400">—</span>
-                    )}
+                    <ListingRowActions listingId={listing.id} />
                   </td>
                 </tr>
               ))}
@@ -114,6 +120,7 @@ export default function ListingsPage() {
           </table>
         </div>
       </div>
+      )}
     </div>
   );
 }
