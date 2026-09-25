@@ -2,12 +2,16 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #09090b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -16,4 +20,14 @@ body {
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
     sans-serif;
+  font-feature-settings: "cv11", "ss01";
+}
+
+::selection {
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+* {
+  scrollbar-color: #d4d4d8 transparent;
 }
