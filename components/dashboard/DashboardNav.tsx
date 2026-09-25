@@ -8,16 +8,19 @@ const links = [
 
 export function DashboardNav() {
   return (
-    <aside className="w-56 shrink-0 border-r border-zinc-200 p-4">
-      <Link href="/" className="mb-8 block text-lg font-semibold">
+    <aside className="shrink-0 border-b border-zinc-200 p-4 sm:w-56 sm:border-b-0 sm:border-r">
+      <Link
+        href="/"
+        className="mb-4 block text-lg font-semibold sm:mb-8"
+      >
         Dealer Post
       </Link>
-      <nav className="flex flex-col gap-1 text-sm">
+      <nav className="flex flex-row gap-1 overflow-x-auto text-sm sm:flex-col sm:overflow-visible">
         {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}
-            className="rounded-md px-3 py-2 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+            className="shrink-0 rounded-md px-3 py-2 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
           >
             {link.label}
           </Link>
