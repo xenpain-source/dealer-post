@@ -65,10 +65,7 @@ export function DashboardNav() {
       </Link>
       <nav className="flex flex-row gap-1 overflow-x-auto text-sm sm:flex-col sm:overflow-visible">
         {links.map((link) => {
-          const isActive =
-            link.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : pathname.startsWith(link.href);
+          const isActive = pathname === link.href;
 
           return (
             <Link
