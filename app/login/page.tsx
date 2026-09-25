@@ -1,4 +1,9 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Log in — Dealer Post",
+};
 
 export default function LoginPage() {
   return (
@@ -16,10 +21,15 @@ export default function LoginPage() {
 
         <form className="mt-6 flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-700">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-zinc-700"
+            >
               Email
             </label>
             <input
+              id="email"
+              name="email"
               type="email"
               disabled
               placeholder="you@dealership.com"
@@ -27,10 +37,15 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-700">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-zinc-700"
+            >
               Password
             </label>
             <input
+              id="password"
+              name="password"
               type="password"
               disabled
               placeholder="••••••••"
