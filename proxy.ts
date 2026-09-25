@@ -17,5 +17,8 @@ export const config = {
     // Skip Next.js internals and static files, always run for API routes.
     "/((?!_next|.*\\.(?:html?|css|js|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
+    // Clerk's first-party clerk-js proxy route ends in .js, so it needs an
+    // explicit carve-out or the pattern above skips it entirely.
+    "/__clerk(.*)",
   ],
 };
