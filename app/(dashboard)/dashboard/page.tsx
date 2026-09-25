@@ -1,5 +1,10 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { sampleListings } from "@/lib/listings";
+
+export const metadata: Metadata = {
+  title: "Overview",
+};
 
 export default function DashboardOverview() {
   const posted = sampleListings.filter((l) => l.status === "posted").length;
