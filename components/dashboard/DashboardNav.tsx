@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { UserButton } from "@clerk/nextjs";
 
 const links = [
   {
@@ -93,7 +94,11 @@ export function DashboardNav() {
         })}
       </nav>
 
-      <div className="mt-auto hidden pt-6 sm:block">
+      <div className="mt-auto hidden flex-col gap-1 pt-6 sm:flex">
+        <div className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-600">
+          <UserButton />
+          Account
+        </div>
         <Link
           href="/"
           className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
