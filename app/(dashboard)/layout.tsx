@@ -14,7 +14,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-1 flex-col bg-zinc-50 sm:flex-row">
+    <div
+      className="flex flex-1 flex-col sm:flex-row"
+      style={{ background: "var(--bg)" }}
+    >
       <DashboardNav />
       <main className="flex-1 overflow-x-hidden p-4 sm:p-8">
         <div className="mx-auto max-w-5xl">{children}</div>
