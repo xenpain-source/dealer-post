@@ -22,14 +22,16 @@ export default async function ListingsPage() {
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Listings</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">
+            Listings
+          </h1>
           <p className="mt-1 text-sm text-zinc-600">
             {rows.length} car{rows.length === 1 ? "" : "s"} in your inventory.
           </p>
         </div>
         <Link
           href="/dashboard/listings/new"
-          className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+          className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-cobalt-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-cobalt-700"
         >
           <svg
             viewBox="0 0 24 24"
@@ -52,7 +54,7 @@ export default async function ListingsPage() {
           </p>
           <Link
             href="/dashboard/listings/new"
-            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-cobalt-600 hover:text-cobalt-700"
           >
             Add your first car
           </Link>
@@ -78,7 +80,7 @@ export default async function ListingsPage() {
                 >
                   <td className="px-5 py-3.5 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-semibold text-white">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-cobalt-500 to-cobalt-400 text-xs font-semibold text-white">
                         {listing.make.slice(0, 1)}
                         {listing.model.slice(0, 1)}
                       </div>
@@ -87,10 +89,10 @@ export default async function ListingsPage() {
                       </span>
                     </div>
                   </td>
-                  <td className="px-5 py-3.5 font-medium whitespace-nowrap text-zinc-900">
+                  <td className="font-mono px-5 py-3.5 font-medium whitespace-nowrap text-zinc-900">
                     ${listing.price.toLocaleString()}
                   </td>
-                  <td className="px-5 py-3.5 whitespace-nowrap text-zinc-600">
+                  <td className="font-mono px-5 py-3.5 whitespace-nowrap text-zinc-600">
                     {listing.mileage.toLocaleString()} mi
                   </td>
                   <td className="px-5 py-3.5 whitespace-nowrap">
