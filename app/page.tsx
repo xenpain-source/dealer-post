@@ -1,304 +1,214 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
-import { platforms } from "@/lib/platforms";
 
 const steps = [
   {
-    step: "1",
-    title: "Add a car",
-    body: "Snap photos on your phone and fill in year, make, model, mileage and price.",
-    icon: (
-      <path
-        d="M4 8.5A1.5 1.5 0 0 1 5.5 7h1.6a1 1 0 0 0 .8-.4l1-1.3a1 1 0 0 1 .8-.4h4.6a1 1 0 0 1 .8.4l1 1.3a1 1 0 0 0 .8.4h1.6A1.5 1.5 0 0 1 20 8.5v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5v-8Z M12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
-        strokeLinejoin="round"
-      />
-    ),
+    n: "01",
+    title: "Snap",
+    body: "Take photos on your phone, right on the lot.",
   },
   {
-    step: "2",
-    title: "Pick where it goes",
-    body: "Choose which platforms this listing should appear on.",
-    icon: (
-      <path
-        d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    ),
+    n: "02",
+    title: "Fill once",
+    body: "Year, make, model, mileage, price. That's it.",
   },
   {
-    step: "3",
-    title: "Publish once",
-    body: "Your listing goes out everywhere you picked, without retyping it each time.",
-    icon: (
-      <path
-        d="m3 11 18-8-8 18-2.5-7.5L3 11Z"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    ),
+    n: "03",
+    title: "Publish everywhere",
+    body: "Pick your channels. Watch each one go Live.",
   },
 ];
 
-const statusStyles: Record<string, string> = {
-  live: "bg-emerald-100 text-emerald-700",
-  "in-progress": "bg-amber-100 text-amber-700",
-  planned: "bg-zinc-100 text-zinc-600",
-};
-
-const statusLabels: Record<string, string> = {
-  live: "Live",
-  "in-progress": "In progress",
-  planned: "Planned",
-};
+const inboxMessages = [
+  { channel: "Facebook Marketplace", time: "now", text: "Is the Accord still available?" },
+  { channel: "Instagram", time: "1 min", text: "Can I see it Saturday morning?" },
+  { channel: "Craigslist", time: "3 min", text: "Does it have a clean title?" },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="dl-dark dl-root flex flex-1 flex-col">
       <SiteHeader />
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 -top-40 -z-10 flex justify-center"
-          >
-            <div className="h-[32rem] w-[64rem] rounded-full bg-gradient-to-b from-cobalt-100 via-cobalt-50 to-transparent blur-3xl" />
-          </div>
-
-          <div className="mx-auto max-w-6xl px-6 pt-20 pb-24 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cobalt-200 bg-cobalt-50 px-3 py-1 text-xs font-medium text-cobalt-700">
-              <span className="flex h-1.5 w-1.5 rounded-full bg-cobalt-600" />
-              Built for independent used car dealers
+        <section className="dl-container" style={{ paddingBlock: "var(--dl-space-24)" }}>
+          <div className="dl-golden">
+            <div className="grid gap-6 justify-items-start">
+              <span className="dl-eyebrow">Free during beta</span>
+              <h1 className="dl-display">
+                Post once.
+                <br />
+                <em>Sell everywhere.</em>
+              </h1>
+              <p className="dl-lead">
+                Snap photos, enter the details once, and DealerLoft publishes
+                your listing to Facebook Marketplace, Instagram and Craigslist
+                at the same time.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/signup" className="dl-btn dl-btn--primary dl-btn--lg">
+                  Get early access
+                </Link>
+                <Link href="#how-it-works" className="dl-btn dl-btn--secondary dl-btn--lg">
+                  See how it works
+                </Link>
+              </div>
             </div>
 
-            <h1 className="font-display mx-auto mt-6 max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
-              Post your inventory{" "}
-              <span className="bg-gradient-to-r from-cobalt-600 to-cobalt-400 bg-clip-text text-transparent">
-                everywhere
-              </span>
-              , from one place.
-            </h1>
-            <p className="mx-auto mt-6 max-w-xl text-lg text-zinc-600">
-              Take a few photos, fill in the details once, and get your
-              listings out to buyers across the platforms they&apos;re
-              already browsing.
-            </p>
-            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-              <Link
-                href="/login"
-                className="w-full rounded-full bg-cobalt-600 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-cobalt-200 transition-colors hover:bg-cobalt-700 sm:w-auto"
-              >
-                Get started
-              </Link>
-              <Link
-                href="#how-it-works"
-                className="w-full rounded-full border border-zinc-300 bg-white px-6 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 sm:w-auto"
-              >
-                See how it works
-              </Link>
-            </div>
-
-            {/* Product preview mock */}
-            <div className="mx-auto mt-16 max-w-3xl">
-              <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl shadow-zinc-200/60">
-                <div className="flex items-center gap-1.5 border-b border-zinc-200 bg-zinc-50 px-4 py-3">
-                  <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-                  <span className="font-mono ml-3 text-xs text-zinc-400">
-                    dealerloft.com/dashboard/listings
-                  </span>
+            {/* Mock listing going out to three channels */}
+            <div className="dl-card" style={{ background: "var(--surface)" }}>
+              <div className="dl-listing" style={{ boxShadow: "none", border: "none" }}>
+                <div className="media" />
+                <div className="body">
+                  <p className="title">2019 Honda Accord EX-L</p>
+                  <p className="price dl-data">$21,900</p>
+                  <p className="specs">48,210 mi</p>
                 </div>
-                <div className="space-y-3 p-5 text-left">
-                  {[
-                    {
-                      name: "2018 Honda Civic",
-                      price: "$14,500",
-                      status: "Posted",
-                      tone: "emerald",
-                    },
-                    {
-                      name: "2016 Toyota Camry",
-                      price: "$12,900",
-                      status: "Posted",
-                      tone: "emerald",
-                    },
-                    {
-                      name: "2020 Ford Escape",
-                      price: "$19,800",
-                      status: "Draft",
-                      tone: "amber",
-                    },
-                  ].map((row) => (
-                    <div
-                      key={row.name}
-                      className="flex items-center gap-4 rounded-xl border border-zinc-100 p-3"
-                    >
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-cobalt-500 to-cobalt-400 text-white">
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          className="h-5 w-5"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M5 17h14M6 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm16 0a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z" />
-                          <path d="M3 17V9.6a1 1 0 0 1 .4-.8l3.2-2.4a2 2 0 0 1 1.2-.4h7.4a2 2 0 0 1 1.7 1l2.4 4 2.1.7a1 1 0 0 1 .6.9V17" />
-                        </svg>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-zinc-900">
-                          {row.name}
-                        </p>
-                        <p className="font-mono text-sm text-zinc-500">
-                          {row.price}
-                        </p>
-                      </div>
-                      <span
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
-                          row.tone === "emerald"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-amber-100 text-amber-700"
-                        }`}
-                      >
-                        {row.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+              </div>
+              <div className="mt-5 grid gap-2.5">
+                {["Facebook Marketplace", "Instagram", "Craigslist"].map((channel) => (
+                  <div key={channel} className="flex items-center justify-between gap-3">
+                    <span className="dl-small" style={{ color: "var(--text)" }}>
+                      {channel}
+                    </span>
+                    <span className="dl-pill dl-pill--live">Live</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
         {/* How it works */}
-        <section id="how-it-works" className="border-t border-zinc-200 py-20">
-          <div className="mx-auto max-w-6xl px-6">
-            <div className="max-w-xl">
-              <h2 className="font-display text-3xl font-semibold tracking-tight">
-                How it works
-              </h2>
-              <p className="mt-3 text-zinc-600">
-                Three steps, and your inventory is live everywhere it needs
-                to be.
-              </p>
-            </div>
-            <div className="mt-12 grid gap-6 sm:grid-cols-3">
-              {steps.map((item) => (
-                <div
-                  key={item.step}
-                  className="group relative rounded-2xl border border-zinc-200 bg-white p-6 transition-shadow hover:shadow-lg hover:shadow-zinc-200/60"
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cobalt-50 text-cobalt-600">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      className="h-5.5 w-5.5"
-                      stroke="currentColor"
-                      strokeWidth="1.75"
-                    >
-                      {item.icon}
-                    </svg>
-                  </div>
-                  <span className="font-mono mt-5 block text-xs font-semibold tracking-wide text-cobalt-600 uppercase">
-                    Step {item.step}
-                  </span>
-                  <h3 className="mt-1 text-lg font-medium text-zinc-900">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2 text-sm text-zinc-600">{item.body}</p>
-                </div>
-              ))}
-            </div>
+        <section
+          id="how-it-works"
+          className="dl-container"
+          style={{
+            paddingBlock: "var(--dl-space-24)",
+            borderTop: "1px solid var(--border)",
+          }}
+        >
+          <div className="grid gap-3 max-w-xl">
+            <span className="dl-eyebrow">How it works</span>
+            <h2 className="dl-h2">
+              Three steps, <em>one listing.</em>
+            </h2>
+          </div>
+          <div className="mt-12 grid gap-6 sm:grid-cols-3">
+            {steps.map((step) => (
+              <div key={step.n} className="dl-card">
+                <span className="dl-data dl-small" style={{ color: "var(--accent-text)" }}>
+                  {step.n}
+                </span>
+                <h3 className="dl-h4 mt-3">{step.title}</h3>
+                <p className="dl-small mt-2">{step.body}</p>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* Platforms */}
-        <section
-          id="platforms"
-          className="border-t border-zinc-200 bg-zinc-50 py-20"
-        >
-          <div className="mx-auto max-w-6xl px-6">
-            <div className="max-w-xl">
-              <h2 className="font-display text-3xl font-semibold tracking-tight">
-                Where your listings can go
+        {/* Field band: the payoff */}
+        <section className="dl-field-band">
+          <div className="dl-field-band__art">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/dealerloft-hero-field.svg" alt="" />
+          </div>
+          <div className="dl-container dl-field-band__inner">
+            <div className="dl-field-band__copy">
+              <span className="dl-eyebrow">What happens next</span>
+              <h2 className="dl-h2">
+                Listings that <em>attract.</em>
               </h2>
-              <p className="mt-3 text-zinc-600">
-                We&apos;re rolling platforms out one at a time, starting with
-                the ones dealers ask for most.
+              <p className="dl-lead">
+                Your listing goes out to three channels at once. Buyers&apos;
+                messages come back to one inbox, so you answer faster and
+                sell sooner.
               </p>
+              <Link href="/signup" className="dl-btn dl-btn--secondary">
+                See the inbox
+              </Link>
             </div>
-            <ul className="mt-10 grid gap-4 sm:grid-cols-3">
-              {platforms.map((platform) => (
-                <li
-                  key={platform.id}
-                  className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-900 text-sm font-semibold text-white">
-                      {platform.name.charAt(0)}
-                    </span>
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[platform.status]}`}
-                    >
-                      {statusLabels[platform.status]}
-                    </span>
+            <ul className="dl-attract">
+              {inboxMessages.map((msg) => (
+                <li key={msg.channel}>
+                  <div className="dl-msg">
+                    <small>
+                      {msg.channel} · {msg.time}
+                    </small>
+                    {msg.text}
                   </div>
-                  <p className="mt-4 font-medium text-zinc-900">
-                    {platform.name}
-                  </p>
-                  <p className="mt-1 text-sm text-zinc-600">
-                    {platform.note}
-                  </p>
                 </li>
               ))}
             </ul>
           </div>
         </section>
 
-        {/* Pricing placeholder */}
-        <section id="pricing" className="border-t border-zinc-200 py-20">
-          <div className="mx-auto max-w-2xl px-6 text-center">
-            <h2 className="font-display text-3xl font-semibold tracking-tight">
-              Pricing
-            </h2>
-            <p className="mt-3 text-zinc-600">
-              Pricing isn&apos;t final yet. Leave your email and we&apos;ll
-              let you know as soon as it&apos;s ready.
-            </p>
-
-            <div className="mx-auto mt-10 max-w-sm rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-              <span className="inline-flex rounded-full bg-cobalt-50 px-3 py-1 text-xs font-medium text-cobalt-700">
-                Free while in beta
-              </span>
-              <p className="mt-4 text-sm text-zinc-600">
-                Be the first to know when DealerLoft is ready for your
-                inventory.
-              </p>
-              <form className="mt-6 flex flex-col gap-2 sm:flex-row">
-                <input
-                  type="email"
-                  placeholder="you@dealership.com"
-                  disabled
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400 focus:border-cobalt-500 focus:ring-2 focus:ring-cobalt-100 focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  disabled
-                  className="shrink-0 rounded-lg bg-cobalt-600 px-4 py-2 text-sm font-medium text-white opacity-50"
-                >
-                  Notify me
-                </button>
-              </form>
-              <p className="mt-3 text-xs text-zinc-400">
-                Not wired up yet — placeholder for the email capture form.
-              </p>
+        {/* Pricing */}
+        <section
+          id="pricing"
+          className="dl-container"
+          style={{ paddingBlock: "var(--dl-space-24)" }}
+        >
+          <div className="grid gap-3 max-w-xl">
+            <span className="dl-eyebrow">Pricing</span>
+            <h2 className="dl-h2">Free while we&apos;re in beta.</h2>
+          </div>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2">
+            <div className="dl-card grid gap-5">
+              <div className="flex items-center justify-between">
+                <span className="dl-pill dl-pill--live">Open now</span>
+                <span className="dl-small">Beta</span>
+              </div>
+              <p className="dl-h3">$0 / month</p>
+              <ul className="dl-body grid gap-2" style={{ color: "var(--text-muted)" }}>
+                <li>Unlimited listings</li>
+                <li>All three channels</li>
+                <li>Direct line to the founders</li>
+              </ul>
+              <Link href="/signup" className="dl-btn dl-btn--primary dl-btn--block">
+                Join the beta
+              </Link>
             </div>
+            <div className="dl-card grid gap-5">
+              <div className="flex items-center justify-between">
+                <span className="dl-pill dl-pill--draft">After beta</span>
+                <span className="dl-small">Dealer</span>
+              </div>
+              <p className="dl-h3">TBA</p>
+              <ul className="dl-body grid gap-2" style={{ color: "var(--text-muted)" }}>
+                <li>Beta dealers get launch pricing</li>
+                <li>We&apos;ll email you before anything changes</li>
+              </ul>
+              <Link href="/signup" className="dl-btn dl-btn--secondary dl-btn--block">
+                Get notified
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Closing CTA */}
+        <section style={{ borderTop: "1px solid var(--border)", background: "var(--surface)" }}>
+          <div
+            className="dl-container text-center grid gap-6 justify-items-center"
+            style={{ paddingBlock: "var(--dl-space-24)" }}
+          >
+            <span className="dl-eyebrow">Free during beta</span>
+            <h2 className="dl-h2 max-w-2xl">
+              Get your lot on every channel this week.
+            </h2>
+            <form className="flex w-full max-w-sm flex-col gap-2 sm:flex-row">
+              <input
+                type="email"
+                placeholder="Work email"
+                className="dl-input"
+                disabled
+              />
+              <button type="submit" className="dl-btn dl-btn--primary" disabled>
+                Join the beta
+              </button>
+            </form>
           </div>
         </section>
       </main>
