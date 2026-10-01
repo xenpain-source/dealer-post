@@ -2,8 +2,6 @@
 
 import { useRef, useState } from "react";
 
-const labelClass = "block text-sm font-medium text-zinc-700";
-
 type UploadedPhoto = { previewUrl: string; publicUrl: string };
 
 export function PhotoUploader({
@@ -75,8 +73,8 @@ export function PhotoUploader({
   }
 
   return (
-    <div>
-      <label htmlFor="photos" className={labelClass}>
+    <div className="dl-field">
+      <label htmlFor="photos" className="dl-label">
         Photos
       </label>
 
@@ -92,7 +90,12 @@ export function PhotoUploader({
           e.preventDefault();
           void handleFiles(e.dataTransfer.files);
         }}
-        className="mt-3 flex h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-300 text-sm text-zinc-400 transition-colors hover:border-cobalt-400 hover:text-cobalt-500"
+        className="dl-small flex h-36 cursor-pointer flex-col items-center justify-center gap-2 text-center"
+        style={{
+          border: "2px dashed var(--border-strong)",
+          borderRadius: "var(--dl-radius-lg)",
+          color: "var(--text-muted)",
+        }}
       >
         <svg
           viewBox="0 0 24 24"
@@ -117,12 +120,20 @@ export function PhotoUploader({
         />
       </div>
 
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {error && (
+        <p className="dl-help" style={{ color: "var(--danger-fg)" }}>
+          {error}
+        </p>
+      )}
 
       {photos.length > 0 && (
-        <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
           {photos.map((photo) => (
-            <div key={photo.publicUrl} className="group relative aspect-square overflow-hidden rounded-lg border border-zinc-200">
+            <div
+              key={photo.publicUrl}
+              className="group relative aspect-square overflow-hidden"
+              style={{ borderRadius: "var(--dl-radius-md)", border: "1px solid var(--border)" }}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={photo.previewUrl}
