@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const links = [
   {
@@ -44,25 +45,8 @@ export function DashboardNav() {
 
   return (
     <aside className="flex shrink-0 flex-col border-b border-zinc-200 bg-white p-4 sm:h-full sm:w-60 sm:border-b-0 sm:border-r sm:p-5">
-      <Link
-        href="/"
-        className="mb-6 flex items-center gap-2 text-lg font-semibold tracking-tight sm:mb-8"
-      >
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            className="h-4.5 w-4.5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M5 17h14M6 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm16 0a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z" />
-            <path d="M3 17V9.6a1 1 0 0 1 .4-.8l3.2-2.4a2 2 0 0 1 1.2-.4h7.4a2 2 0 0 1 1.7 1l2.4 4 2.1.7a1 1 0 0 1 .6.9V17" />
-          </svg>
-        </span>
-        Dealer Post
+      <Link href="/" aria-label="DealerLoft home" className="mb-6 sm:mb-8">
+        <BrandLogo className="h-6 w-auto" />
       </Link>
       <nav className="flex flex-row gap-1 overflow-x-auto text-sm sm:flex-col sm:overflow-visible">
         {links.map((link) => {
@@ -75,7 +59,7 @@ export function DashboardNav() {
               aria-current={isActive ? "page" : undefined}
               className={`flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 font-medium transition-colors ${
                 isActive
-                  ? "bg-indigo-50 text-indigo-700"
+                  ? "bg-cobalt-50 text-cobalt-700"
                   : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
               }`}
             >
