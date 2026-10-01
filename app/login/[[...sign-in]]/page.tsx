@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SignIn } from "@clerk/nextjs";
-import { BrandLogo } from "@/components/BrandLogo";
+import { BrandLogoSmall } from "@/components/BrandLogo";
 
 export const metadata: Metadata = {
   title: "Log in — DealerLoft",
@@ -9,30 +9,64 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-zinc-50 px-6 py-16">
+    <div
+      className="flex-1 grid"
+      style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,1.618fr)" }}
+    >
+      {/* Brand panel */}
       <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-40 flex justify-center"
+        className="dl-dark relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-12"
+        style={{ background: "var(--bg)" }}
       >
-        <div className="h-[28rem] w-[56rem] rounded-full bg-gradient-to-b from-cobalt-100 via-cobalt-50 to-transparent blur-3xl" />
+        <div className="absolute inset-0" style={{ zIndex: 0 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/dealerloft-hero-field.svg"
+            alt=""
+            className="h-full w-full object-cover"
+            style={{ objectPosition: "left center" }}
+          />
+        </div>
+        <Link href="/" aria-label="DealerLoft home" className="relative">
+          <BrandLogoSmall tone="white" className="h-6 w-auto" />
+        </Link>
+        <h2 className="dl-display relative">
+          Listings that
+          <br />
+          <em>attract.</em>
+        </h2>
       </div>
 
-      <div className="relative flex w-full max-w-sm flex-col items-center">
-        <Link href="/" aria-label="DealerLoft home" className="mb-6">
-          <BrandLogo className="h-7 w-auto" />
-        </Link>
+      {/* Form */}
+      <div className="dl-light flex items-center justify-center px-6 py-16">
+        <div className="grid w-full max-w-sm gap-6">
+          <Link href="/" aria-label="DealerLoft home" className="lg:hidden">
+            <BrandLogoSmall tone="cobalt" className="h-6 w-auto" />
+          </Link>
 
-        <SignIn
-          appearance={{
-            elements: {
-              rootBox: "w-full",
-              card: "w-full rounded-2xl border border-zinc-200 shadow-xl shadow-zinc-200/60",
-              formButtonPrimary:
-                "bg-cobalt-600 hover:bg-cobalt-700 text-sm normal-case",
-              footerActionLink: "text-cobalt-600 hover:text-cobalt-700",
-            },
-          }}
-        />
+          <div>
+            <h1 className="dl-h2">Welcome back</h1>
+            <p className="dl-small mt-1">Sign in to manage your inventory.</p>
+          </div>
+
+          <SignIn
+            appearance={{
+              elements: {
+                rootBox: "w-full",
+                card: "w-full shadow-none border-0 p-0 bg-transparent",
+                headerTitle: "hidden",
+                headerSubtitle: "hidden",
+                formButtonPrimary: "dl-btn dl-btn--primary dl-btn--block normal-case",
+                formFieldInput: "dl-input",
+                formFieldLabel: "dl-label",
+                footerActionLink: "dl-link",
+                dividerText: "dl-small",
+                socialButtonsBlockButton: "dl-btn dl-btn--secondary dl-btn--block normal-case",
+                identityPreviewText: "dl-small",
+              },
+            }}
+          />
+        </div>
       </div>
     </div>
   );
