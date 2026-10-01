@@ -92,7 +92,7 @@ export function PhotoUploader({
           e.preventDefault();
           void handleFiles(e.dataTransfer.files);
         }}
-        className="mt-3 flex h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-300 text-sm text-zinc-400 transition-colors hover:border-indigo-400 hover:text-indigo-500"
+        className="mt-3 flex h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-300 text-sm text-zinc-400 transition-colors hover:border-cobalt-400 hover:text-cobalt-500"
       >
         <svg
           viewBox="0 0 24 24"
