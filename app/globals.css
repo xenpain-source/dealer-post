@@ -1,15 +1,26 @@
 @import "tailwindcss";
 
+/* DealerLoft Web UI v1.0 — tokens + components (brand system of record). */
+@import "./dealerloft-tokens.css";
+@import "./dealerloft-components.css";
+
 :root {
   --background: #ffffff;
   --foreground: #0e0f12;
+
+  /* Point the kit's font slots at our self-hosted (next/font) faces instead
+     of bare family names, so we don't depend on a Google Fonts <link>. */
+  --dl-font-display: var(--font-outfit), "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --dl-font-body: var(--font-manrope), "Segoe UI", system-ui, sans-serif;
+  --dl-font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* DealerLoft brand palette (identity v1.3) */
+  /* DealerLoft brand palette (identity v1.3) — kept for any remaining
+     Tailwind utility usage; the .dl- component system is the source of truth. */
   --color-cobalt-50: #eef1ff;
   --color-cobalt-100: #dde4ff;
   --color-cobalt-200: #c0caff;
@@ -47,4 +58,16 @@ body {
 
 * {
   scrollbar-color: #d5d9e0 transparent;
+}
+
+/* Collapse the dl-sidebar into a horizontal top bar below the sm breakpoint. */
+@media (max-width: 639px) {
+  .dl-sidebar {
+    width: auto;
+    flex-direction: row;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 12px;
+    align-items: center;
+  }
 }
