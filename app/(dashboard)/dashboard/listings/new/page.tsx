@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 export default function NewListingPage() {
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-semibold tracking-tight">Add a car</h1>
-      <p className="mt-1 text-sm text-zinc-600">
+      <h1 className="dl-h1">Add a car</h1>
+      <p className="dl-small mt-1">
         Add it once — it&apos;s saved to your inventory right away.
       </p>
 
