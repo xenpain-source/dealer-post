@@ -5,11 +5,6 @@ import { useRouter } from "next/navigation";
 import { platforms } from "@/lib/platforms";
 import { PhotoUploader } from "@/components/dashboard/PhotoUploader";
 
-const inputClass =
-  "mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400 focus:border-cobalt-500 focus:ring-2 focus:ring-cobalt-100 focus:outline-none disabled:bg-zinc-50 disabled:text-zinc-400";
-
-const labelClass = "block text-sm font-medium text-zinc-700";
-
 export function NewListingForm() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -54,17 +49,15 @@ export function NewListingForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-6">
-      <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+      <div className="dl-card">
         <PhotoUploader onUploaded={setPhotoUrls} />
       </div>
 
-      <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <h2 className="text-sm font-semibold text-zinc-900">
-          Vehicle details
-        </h2>
+      <div className="dl-card">
+        <h2 className="dl-h4">Vehicle details</h2>
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="year" className={labelClass}>
+          <div className="dl-field">
+            <label htmlFor="year" className="dl-label">
               Year
             </label>
             <input
@@ -73,64 +66,58 @@ export function NewListingForm() {
               type="number"
               required
               placeholder="2018"
-              className={inputClass}
+              className="dl-input dl-input--data"
             />
           </div>
-          <div>
-            <label htmlFor="make" className={labelClass}>
+          <div className="dl-field">
+            <label htmlFor="make" className="dl-label">
               Make
             </label>
-            <input
-              id="make"
-              name="make"
-              required
-              placeholder="Honda"
-              className={inputClass}
-            />
+            <input id="make" name="make" required placeholder="Honda" className="dl-input" />
           </div>
-          <div>
-            <label htmlFor="model" className={labelClass}>
+          <div className="dl-field">
+            <label htmlFor="model" className="dl-label">
               Model
             </label>
-            <input
-              id="model"
-              name="model"
-              required
-              placeholder="Civic"
-              className={inputClass}
-            />
+            <input id="model" name="model" required placeholder="Civic" className="dl-input" />
           </div>
-          <div>
-            <label htmlFor="mileage" className={labelClass}>
+          <div className="dl-field">
+            <label htmlFor="mileage" className="dl-label">
               Mileage
             </label>
-            <input
-              id="mileage"
-              name="mileage"
-              required
-              inputMode="numeric"
-              placeholder="52,000"
-              className={inputClass}
-            />
+            <div className="dl-affix dl-affix--suffix">
+              <input
+                id="mileage"
+                name="mileage"
+                required
+                inputMode="numeric"
+                placeholder="52,000"
+                className="dl-input dl-input--data"
+              />
+              <span className="suf">mi</span>
+            </div>
           </div>
-          <div>
-            <label htmlFor="price" className={labelClass}>
+          <div className="dl-field">
+            <label htmlFor="price" className="dl-label">
               Price
             </label>
-            <input
-              id="price"
-              name="price"
-              required
-              inputMode="numeric"
-              placeholder="14,500"
-              className={inputClass}
-            />
+            <div className="dl-affix">
+              <span className="pre">$</span>
+              <input
+                id="price"
+                name="price"
+                required
+                inputMode="numeric"
+                placeholder="14,500"
+                className="dl-input dl-input--data"
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <label htmlFor="description" className={labelClass}>
+      <div className="dl-card dl-field">
+        <label htmlFor="description" className="dl-label">
           Description
         </label>
         <textarea
@@ -138,15 +125,13 @@ export function NewListingForm() {
           name="description"
           rows={4}
           placeholder="Clean title, one owner, well maintained..."
-          className={inputClass}
+          className="dl-textarea"
         />
       </div>
 
-      <fieldset className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <legend className="text-sm font-semibold text-zinc-900">
-          Post to
-        </legend>
-        <p className="mt-1 text-xs text-zinc-500">
+      <fieldset className="dl-card">
+        <legend className="dl-h4">Post to</legend>
+        <p className="dl-small mt-1">
           Platform posting isn&apos;t connected yet — this saves the listing
           as a draft you can post manually for now.
         </p>
@@ -155,35 +140,26 @@ export function NewListingForm() {
             <label
               key={platform.id}
               htmlFor={`platform-${platform.id}`}
-              className="flex cursor-not-allowed items-center gap-3 rounded-xl border border-zinc-200 p-3 text-sm text-zinc-600"
+              className="dl-channel"
+              style={{ cursor: "not-allowed" }}
             >
               <input
                 id={`platform-${platform.id}`}
                 name="platforms"
                 type="checkbox"
                 disabled
-                className="h-4 w-4 rounded border-zinc-300 text-cobalt-600 focus:ring-cobalt-500"
+                className="dl-check"
+                style={{ width: 18, height: 18 }}
               />
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-zinc-900 text-xs font-semibold text-white">
-                {platform.name.charAt(0)}
-              </span>
-              {platform.name}
+              <span className="name">{platform.name}</span>
             </label>
           ))}
         </div>
       </fieldset>
 
-      {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-700">
-          {error}
-        </p>
-      )}
+      {error && <div className="dl-alert dl-alert--danger">{error}</div>}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="w-fit rounded-lg bg-cobalt-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-cobalt-700 disabled:opacity-50"
-      >
+      <button type="submit" disabled={submitting} className="dl-btn dl-btn--primary w-fit">
         {submitting ? "Saving…" : "Save listing"}
       </button>
     </form>
