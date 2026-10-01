@@ -1,32 +1,31 @@
 import Link from "next/link";
-import { BrandLogo } from "@/components/BrandLogo";
+import { BrandLogoSmall } from "@/components/BrandLogo";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-zinc-200 bg-zinc-50">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 sm:flex-row sm:items-center sm:justify-between">
+    <footer
+      className="dl-dark"
+      style={{ borderTop: "1px solid var(--border)" }}
+    >
+      <div className="dl-container flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between">
         <Link href="/" aria-label="DealerLoft home">
-          <BrandLogo className="h-5 w-auto" />
+          <BrandLogoSmall tone="white" className="h-5 w-auto" />
         </Link>
 
-        <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-zinc-600">
-          <Link href="/#how-it-works" className="hover:text-zinc-900">
+        <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 dl-small">
+          <Link href="/#how-it-works" className="dl-link" style={{ color: "var(--text-muted)" }}>
             How it works
           </Link>
-          <Link href="/#platforms" className="hover:text-zinc-900">
-            Platforms
-          </Link>
-          <Link href="/#pricing" className="hover:text-zinc-900">
+          <Link href="/#pricing" className="dl-link" style={{ color: "var(--text-muted)" }}>
             Pricing
           </Link>
-          <Link href="/login" className="hover:text-zinc-900">
-            Log in
+          <Link href="/login" className="dl-link" style={{ color: "var(--text-muted)" }}>
+            Sign in
           </Link>
         </nav>
 
-        <p className="text-sm text-zinc-500">
-          © {new Date().getFullYear()} DealerLoft. Built for independent used
-          car dealers.
+        <p className="dl-small">
+          © {new Date().getFullYear()} DealerLoft · Privacy · Terms
         </p>
       </div>
     </footer>
