@@ -6,7 +6,7 @@ import { platforms } from "@/lib/platforms";
 import { PhotoUploader } from "@/components/dashboard/PhotoUploader";
 
 const inputClass =
-  "mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 focus:outline-none disabled:bg-zinc-50 disabled:text-zinc-400";
+  "mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400 focus:border-cobalt-500 focus:ring-2 focus:ring-cobalt-100 focus:outline-none disabled:bg-zinc-50 disabled:text-zinc-400";
 
 const labelClass = "block text-sm font-medium text-zinc-700";
 
@@ -162,7 +162,7 @@ export function NewListingForm() {
                 name="platforms"
                 type="checkbox"
                 disabled
-                className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                className="h-4 w-4 rounded border-zinc-300 text-cobalt-600 focus:ring-cobalt-500"
               />
               <span className="flex h-7 w-7 items-center justify-center rounded-md bg-zinc-900 text-xs font-semibold text-white">
                 {platform.name.charAt(0)}
@@ -182,7 +182,7 @@ export function NewListingForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="w-fit rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+        className="w-fit rounded-lg bg-cobalt-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-cobalt-700 disabled:opacity-50"
       >
         {submitting ? "Saving…" : "Save listing"}
       </button>
