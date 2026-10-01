@@ -3,8 +3,8 @@ import { DashboardNav } from "@/components/dashboard/DashboardNav";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s — Dealer Post",
-    default: "Dashboard — Dealer Post",
+    template: "%s — DealerLoft",
+    default: "Dashboard — DealerLoft",
   },
 };
 
