@@ -1,0 +1,152 @@
+/* ==========================================================================
+   DealerLoft Web UI — design tokens v1.0
+   Source of truth for the marketing site (dark), auth screens and dealer app (light).
+   Fonts (Google Fonts):
+   https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap
+   ========================================================================== */
+
+:root {
+  /* ---- Brand ---------------------------------------------------------- */
+  --dl-asphalt: #0E0F12;
+  --dl-showroom: #F4F5F7;
+  --dl-cobalt: #2E4BFF;
+  --dl-cobalt-light: #7B88FF;
+  --dl-primer: #5B6270;
+  --dl-chrome: #D5D9E0;
+  --dl-white: #FFFFFF;
+
+  /* ---- Scales ---------------------------------------------------------- */
+  --dl-cobalt-50: #EEF0FF;
+  --dl-cobalt-100: #DDE2FF;
+  --dl-cobalt-400: #4560FF;   /* hover on dark */
+  --dl-cobalt-500: #2E4BFF;   /* = Cobalt */
+  --dl-cobalt-600: #2339E0;   /* hover on light */
+  --dl-cobalt-700: #1B2DB8;   /* pressed */
+
+  --dl-gray-950: #0B0C0F;
+  --dl-gray-900: #0E0F12;     /* = Asphalt */
+  --dl-gray-850: #15171C;
+  --dl-gray-800: #1C1F26;
+  --dl-gray-700: #2A2E36;
+  --dl-gray-600: #3A3F4A;
+  --dl-gray-500: #5B6270;     /* = Primer */
+  --dl-gray-400: #8A919E;
+  --dl-gray-300: #B4BAC5;
+  --dl-gray-200: #D5D9E0;     /* = Chrome */
+  --dl-gray-150: #E1E4EA;
+  --dl-gray-100: #ECEEF2;
+  --dl-gray-50:  #F4F5F7;     /* = Showroom */
+
+  --dl-green-50: #E3F6EA;  --dl-green-500: #12A150;  --dl-green-700: #0B7A3B;  --dl-green-300: #3DD07C;
+  --dl-amber-50: #FDF1D8;  --dl-amber-500: #E8A317;  --dl-amber-800: #8A5A00;  --dl-amber-300: #F5B942;
+  --dl-red-50:   #FDE8E8;  --dl-red-600:   #D93036;  --dl-red-700:   #B4232A;  --dl-red-300:   #FF7A7F;
+
+  /* ---- Type ------------------------------------------------------------ */
+  --dl-font-display: "Outfit", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --dl-font-body: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --dl-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Modular scale, ratio √φ = 1.272, base 16 */
+  --dl-text-xs: 0.75rem;     /* 12 */
+  --dl-text-sm: 0.875rem;    /* 14 */
+  --dl-text-base: 1rem;      /* 16 */
+  --dl-text-lg: 1.25rem;     /* 20 */
+  --dl-text-xl: 1.625rem;    /* 26 */
+  --dl-text-2xl: 2.0625rem;  /* 33 */
+  --dl-text-3xl: 2.625rem;   /* 42 */
+  --dl-text-4xl: 3.3125rem;  /* 53 */
+  --dl-text-5xl: 4.25rem;    /* 68 */
+
+  --dl-leading-tight: 1.05;
+  --dl-leading-snug: 1.25;
+  --dl-leading-body: 1.6;
+  --dl-tracking-display: -0.03em;
+  --dl-tracking-heading: -0.02em;
+  --dl-tracking-label: 0.08em;
+
+  /* ---- Space (4 px base) ---------------------------------------------- */
+  --dl-space-1: 4px;  --dl-space-2: 8px;   --dl-space-3: 12px;  --dl-space-4: 16px;
+  --dl-space-5: 20px; --dl-space-6: 24px;  --dl-space-8: 32px;  --dl-space-10: 40px;
+  --dl-space-12: 48px; --dl-space-16: 64px; --dl-space-24: 96px; --dl-space-32: 128px;
+
+  /* ---- Radius ---------------------------------------------------------- */
+  --dl-radius-xs: 4px;    /* tags, table chips */
+  --dl-radius-sm: 6px;    /* checkboxes, small cards */
+  --dl-radius-md: 10px;   /* buttons, inputs */
+  --dl-radius-lg: 14px;   /* cards, panels */
+  --dl-radius-xl: 20px;   /* modals, hero media */
+  --dl-radius-pill: 999px;
+
+  /* ---- Layout ---------------------------------------------------------- */
+  --dl-container: 1180px;
+  --dl-gutter: clamp(16px, 4vw, 40px);
+  --dl-sidebar: 248px;
+  --dl-topbar: 64px;
+  --dl-golden: minmax(0, 1.618fr) minmax(0, 1fr);  /* grid-template-columns: var(--dl-golden) */
+
+  /* ---- Motion ---------------------------------------------------------- */
+  --dl-ease: cubic-bezier(.4, 0, .2, 1);
+  --dl-ease-snap: cubic-bezier(.2, 1.4, .4, 1);   /* magnet moments only */
+  --dl-dur-fast: 120ms;
+  --dl-dur: 200ms;
+  --dl-dur-slow: 320ms;
+
+  --dl-z-sticky: 10; --dl-z-dropdown: 20; --dl-z-modal: 40; --dl-z-toast: 50;
+}
+
+/* ---- Semantic themes ---------------------------------------------------
+   .dl-light = dealer app + auth forms (default)
+   .dl-dark  = marketing site, auth brand panel
+   ----------------------------------------------------------------------- */
+:root, .dl-light {
+  --bg: var(--dl-gray-50);
+  --surface: var(--dl-white);
+  --surface-2: var(--dl-gray-100);
+  --surface-inverse: var(--dl-asphalt);
+  --border: var(--dl-gray-150);
+  --border-strong: var(--dl-gray-200);
+  --text: var(--dl-asphalt);
+  --text-muted: var(--dl-gray-500);
+  --text-subtle: var(--dl-gray-400);   /* disabled & placeholder only */
+  --accent: var(--dl-cobalt-500);
+  --accent-hover: var(--dl-cobalt-600);
+  --accent-press: var(--dl-cobalt-700);
+  --accent-soft: var(--dl-cobalt-50);
+  --accent-text: var(--dl-cobalt-500);
+  --on-accent: var(--dl-white);
+  --focus-ring: 0 0 0 3px rgba(46, 75, 255, .35);
+  --success-bg: var(--dl-green-50); --success-fg: var(--dl-green-700); --success-dot: var(--dl-green-500);
+  --warning-bg: var(--dl-amber-50); --warning-fg: var(--dl-amber-800); --warning-dot: var(--dl-amber-500);
+  --danger-bg: var(--dl-red-50);    --danger-fg: var(--dl-red-700);    --danger-solid: var(--dl-red-600);
+  --neutral-bg: var(--dl-gray-100); --neutral-fg: var(--dl-asphalt);
+  --shadow-sm: 0 1px 2px rgba(14, 15, 18, .06), 0 1px 1px rgba(14, 15, 18, .04);
+  --shadow-md: 0 8px 24px -12px rgba(14, 15, 18, .22), 0 2px 4px rgba(14, 15, 18, .04);
+  --shadow-lg: 0 24px 48px -20px rgba(14, 15, 18, .35);
+  color-scheme: light;
+}
+.dl-dark {
+  --bg: var(--dl-asphalt);
+  --surface: var(--dl-gray-850);
+  --surface-2: var(--dl-gray-800);
+  --surface-inverse: var(--dl-white);
+  --border: var(--dl-gray-700);
+  --border-strong: var(--dl-gray-600);
+  --text: var(--dl-showroom);
+  --text-muted: #9AA1AE;
+  --text-subtle: var(--dl-gray-500);
+  --accent: var(--dl-cobalt-500);
+  --accent-hover: var(--dl-cobalt-400);
+  --accent-press: var(--dl-cobalt-600);
+  --accent-soft: rgba(46, 75, 255, .16);
+  --accent-text: var(--dl-cobalt-light);
+  --on-accent: var(--dl-white);
+  --focus-ring: 0 0 0 3px rgba(123, 136, 255, .55);
+  --success-bg: rgba(61, 208, 124, .14); --success-fg: var(--dl-green-300); --success-dot: var(--dl-green-300);
+  --warning-bg: rgba(245, 185, 66, .14); --warning-fg: var(--dl-amber-300); --warning-dot: var(--dl-amber-300);
+  --danger-bg: rgba(255, 122, 127, .14); --danger-fg: var(--dl-red-300);   --danger-solid: var(--dl-red-600);
+  --neutral-bg: var(--dl-gray-700); --neutral-fg: var(--dl-showroom);
+  --shadow-sm: none;
+  --shadow-md: 0 0 0 1px var(--dl-gray-700);
+  --shadow-lg: 0 24px 60px -24px rgba(0, 0, 0, .7), 0 0 0 1px var(--dl-gray-700);
+  color-scheme: dark;
+}
