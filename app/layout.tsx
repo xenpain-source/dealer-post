@@ -36,7 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         lang="en"
         className={`h-full antialiased ${outfit.variable} ${manrope.variable} ${plexMono.variable}`}
       >
-        <body className="min-h-full flex flex-col bg-white font-sans text-zinc-900">
+        <body className="dl-root dl-light min-h-full flex flex-col">
           {children}
         </body>
       </html>
