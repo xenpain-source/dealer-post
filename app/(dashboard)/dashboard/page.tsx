@@ -20,7 +20,7 @@ const stats = (posted: number, drafts: number, total: number) => [
         strokeLinejoin="round"
       />
     ),
-    tone: "bg-indigo-50 text-indigo-600",
+    tone: "bg-cobalt-50 text-cobalt-600",
   },
   {
     label: "Posted",
@@ -64,14 +64,16 @@ export default async function DashboardOverview() {
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">
+            Overview
+          </h1>
           <p className="mt-1 text-sm text-zinc-600">
             Your real inventory for {dealer.name}.
           </p>
         </div>
         <Link
           href="/dashboard/listings/new"
-          className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+          className="inline-flex w-fit items-center gap-1.5 rounded-lg bg-cobalt-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-cobalt-700"
         >
           <svg
             viewBox="0 0 24 24"
@@ -106,7 +108,7 @@ export default async function DashboardOverview() {
                 {stat.icon}
               </svg>
             </div>
-            <div className="mt-4 text-2xl font-semibold text-zinc-900">
+            <div className="font-mono mt-4 text-2xl font-semibold text-zinc-900">
               {stat.value}
             </div>
             <div className="text-sm text-zinc-600">{stat.label}</div>
@@ -122,7 +124,7 @@ export default async function DashboardOverview() {
         {recent.length === 0 && (
           <p className="mt-4 rounded-xl border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-500">
             No cars yet —{" "}
-            <Link href="/dashboard/listings/new" className="text-indigo-600 hover:text-indigo-700">
+            <Link href="/dashboard/listings/new" className="text-cobalt-600 hover:text-cobalt-700">
               add your first one
             </Link>
             .
@@ -135,7 +137,7 @@ export default async function DashboardOverview() {
               className="flex items-center justify-between gap-4 py-3"
             >
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-semibold text-white">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-cobalt-500 to-cobalt-400 text-xs font-semibold text-white">
                   {listing.make.slice(0, 1)}
                   {listing.model.slice(0, 1)}
                 </div>
@@ -157,7 +159,7 @@ export default async function DashboardOverview() {
         </div>
         <Link
           href="/dashboard/listings"
-          className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-cobalt-600 hover:text-cobalt-700"
         >
           View all listings
           <svg
