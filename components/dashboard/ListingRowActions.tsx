@@ -25,12 +25,13 @@ export function ListingRowActions({ listingId }: { listingId: string }) {
 
   return (
     <div className="flex items-center justify-end gap-2">
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && <span className="dl-small" style={{ color: "var(--danger-fg)" }}>{error}</span>}
       <button
         type="button"
         onClick={handleDelete}
         disabled={isPending}
-        className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+        className="dl-btn dl-btn--ghost dl-btn--sm"
+        style={{ color: "var(--danger-fg)" }}
       >
         {isPending ? "Deleting…" : "Delete"}
       </button>
