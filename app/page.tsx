@@ -65,18 +65,18 @@ export default function Home() {
             aria-hidden
             className="pointer-events-none absolute inset-x-0 -top-40 -z-10 flex justify-center"
           >
-            <div className="h-[32rem] w-[64rem] rounded-full bg-gradient-to-b from-indigo-100 via-indigo-50 to-transparent blur-3xl" />
+            <div className="h-[32rem] w-[64rem] rounded-full bg-gradient-to-b from-cobalt-100 via-cobalt-50 to-transparent blur-3xl" />
           </div>
 
           <div className="mx-auto max-w-6xl px-6 pt-20 pb-24 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-              <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-600" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-cobalt-200 bg-cobalt-50 px-3 py-1 text-xs font-medium text-cobalt-700">
+              <span className="flex h-1.5 w-1.5 rounded-full bg-cobalt-600" />
               Built for independent used car dealers
             </div>
 
-            <h1 className="mx-auto mt-6 max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
+            <h1 className="font-display mx-auto mt-6 max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
               Post your inventory{" "}
-              <span className="bg-gradient-to-r from-indigo-600 to-violet-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-cobalt-600 to-cobalt-400 bg-clip-text text-transparent">
                 everywhere
               </span>
               , from one place.
@@ -89,7 +89,7 @@ export default function Home() {
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
               <Link
                 href="/login"
-                className="w-full rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition-colors hover:bg-indigo-700 sm:w-auto"
+                className="w-full rounded-full bg-cobalt-600 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-cobalt-200 transition-colors hover:bg-cobalt-700 sm:w-auto"
               >
                 Get started
               </Link>
@@ -108,8 +108,8 @@ export default function Home() {
                   <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
                   <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
                   <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-                  <span className="ml-3 text-xs text-zinc-400">
-                    dealer-post.app/dashboard/listings
+                  <span className="font-mono ml-3 text-xs text-zinc-400">
+                    dealerloft.com/dashboard/listings
                   </span>
                 </div>
                 <div className="space-y-3 p-5 text-left">
@@ -137,7 +137,7 @@ export default function Home() {
                       key={row.name}
                       className="flex items-center gap-4 rounded-xl border border-zinc-100 p-3"
                     >
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-cobalt-500 to-cobalt-400 text-white">
                         <svg
                           viewBox="0 0 24 24"
                           fill="none"
@@ -155,7 +155,9 @@ export default function Home() {
                         <p className="truncate text-sm font-medium text-zinc-900">
                           {row.name}
                         </p>
-                        <p className="text-sm text-zinc-500">{row.price}</p>
+                        <p className="font-mono text-sm text-zinc-500">
+                          {row.price}
+                        </p>
                       </div>
                       <span
                         className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -178,7 +180,7 @@ export default function Home() {
         <section id="how-it-works" className="border-t border-zinc-200 py-20">
           <div className="mx-auto max-w-6xl px-6">
             <div className="max-w-xl">
-              <h2 className="text-3xl font-semibold tracking-tight">
+              <h2 className="font-display text-3xl font-semibold tracking-tight">
                 How it works
               </h2>
               <p className="mt-3 text-zinc-600">
@@ -192,7 +194,7 @@ export default function Home() {
                   key={item.step}
                   className="group relative rounded-2xl border border-zinc-200 bg-white p-6 transition-shadow hover:shadow-lg hover:shadow-zinc-200/60"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cobalt-50 text-cobalt-600">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -203,7 +205,7 @@ export default function Home() {
                       {item.icon}
                     </svg>
                   </div>
-                  <span className="mt-5 block text-xs font-semibold tracking-wide text-indigo-600 uppercase">
+                  <span className="font-mono mt-5 block text-xs font-semibold tracking-wide text-cobalt-600 uppercase">
                     Step {item.step}
                   </span>
                   <h3 className="mt-1 text-lg font-medium text-zinc-900">
@@ -223,7 +225,7 @@ export default function Home() {
         >
           <div className="mx-auto max-w-6xl px-6">
             <div className="max-w-xl">
-              <h2 className="text-3xl font-semibold tracking-tight">
+              <h2 className="font-display text-3xl font-semibold tracking-tight">
                 Where your listings can go
               </h2>
               <p className="mt-3 text-zinc-600">
@@ -262,7 +264,7 @@ export default function Home() {
         {/* Pricing placeholder */}
         <section id="pricing" className="border-t border-zinc-200 py-20">
           <div className="mx-auto max-w-2xl px-6 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight">
+            <h2 className="font-display text-3xl font-semibold tracking-tight">
               Pricing
             </h2>
             <p className="mt-3 text-zinc-600">
@@ -271,11 +273,11 @@ export default function Home() {
             </p>
 
             <div className="mx-auto mt-10 max-w-sm rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-              <span className="inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+              <span className="inline-flex rounded-full bg-cobalt-50 px-3 py-1 text-xs font-medium text-cobalt-700">
                 Free while in beta
               </span>
               <p className="mt-4 text-sm text-zinc-600">
-                Be the first to know when Dealer Post is ready for your
+                Be the first to know when DealerLoft is ready for your
                 inventory.
               </p>
               <form className="mt-6 flex flex-col gap-2 sm:flex-row">
@@ -283,12 +285,12 @@ export default function Home() {
                   type="email"
                   placeholder="you@dealership.com"
                   disabled
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 focus:outline-none"
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400 focus:border-cobalt-500 focus:ring-2 focus:ring-cobalt-100 focus:outline-none"
                 />
                 <button
                   type="submit"
                   disabled
-                  className="shrink-0 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white opacity-50"
+                  className="shrink-0 rounded-lg bg-cobalt-600 px-4 py-2 text-sm font-medium text-white opacity-50"
                 >
                   Notify me
                 </button>
