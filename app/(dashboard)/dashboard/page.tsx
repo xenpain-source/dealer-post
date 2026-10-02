@@ -19,12 +19,14 @@ export default async function DashboardOverview() {
 
   const posted = rows.filter((l) => l.status === "posted").length;
   const drafts = rows.filter((l) => l.status === "draft").length;
+  const sold = rows.filter((l) => l.status === "sold").length;
   const recent = rows.slice(0, 5);
 
   const stats = [
     { k: "Total cars", v: rows.length },
     { k: "Posted", v: posted },
     { k: "Drafts", v: drafts },
+    { k: "Sold", v: sold },
   ];
 
   return (
@@ -49,7 +51,7 @@ export default async function DashboardOverview() {
         </Link>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <div key={stat.k} className="dl-card dl-stat">
             <div className="k">{stat.k}</div>
@@ -93,10 +95,14 @@ export default async function DashboardOverview() {
               </div>
               <span
                 className={`dl-pill shrink-0 ${
-                  listing.status === "posted" ? "dl-pill--live" : "dl-pill--draft"
+                  listing.status === "draft" ? "dl-pill--draft" : "dl-pill--live"
                 }`}
               >
-                {listing.status === "posted" ? "Posted" : "Draft"}
+                {listing.status === "posted"
+                  ? "Posted"
+                  : listing.status === "sold"
+                    ? "Sold"
+                    : "Draft"}
               </span>
             </div>
           ))}
