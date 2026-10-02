@@ -39,18 +39,20 @@ export default function Home() {
         {/* Hero */}
         <section className="dl-container dl-section">
           <div className="dl-golden">
-            <div className="grid gap-6 justify-items-start">
-              <span className="dl-eyebrow">Free during beta</span>
-              <h1 className="dl-display">
-                Post once.
-                <br />
-                <em>Sell everywhere.</em>
-              </h1>
-              <p className="dl-lead">
-                Snap photos, enter the details once, and DealerLoft publishes
-                your listing to Facebook Marketplace, Instagram and Craigslist
-                at the same time.
-              </p>
+            <div className="flex flex-col justify-between self-stretch">
+              <div className="grid gap-6 justify-items-start">
+                <span className="dl-eyebrow">Free during beta</span>
+                <h1 className="dl-display">
+                  Post once.
+                  <br />
+                  <em>Sell everywhere.</em>
+                </h1>
+                <p className="dl-lead">
+                  Snap photos, enter the details once, and DealerLoft publishes
+                  your listing to Facebook Marketplace, Instagram and Craigslist
+                  at the same time.
+                </p>
+              </div>
               <div className="flex flex-wrap gap-3">
                 <Link href="/signup" className="dl-btn dl-btn--primary dl-btn--lg">
                   Get early access
