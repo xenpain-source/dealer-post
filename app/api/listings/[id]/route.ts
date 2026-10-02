@@ -27,6 +27,14 @@ export async function PATCH(
   if (body.description !== undefined)
     updates.description = String(body.description);
   if (body.status !== undefined) updates.status = body.status;
+  if (body.vin !== undefined)
+    updates.vin = body.vin ? String(body.vin).trim().toUpperCase() : null;
+  if (body.bodyType !== undefined)
+    updates.bodyType = body.bodyType ? String(body.bodyType) : null;
+  if (body.stockNumber !== undefined)
+    updates.stockNumber = body.stockNumber ? String(body.stockNumber).trim() : null;
+  if (body.cleanTitle !== undefined) updates.cleanTitle = Boolean(body.cleanTitle);
+  if (body.oneOwner !== undefined) updates.oneOwner = Boolean(body.oneOwner);
 
   const [updated] = await db
     .update(listings)
