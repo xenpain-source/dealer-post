@@ -65,20 +65,28 @@ export default async function ListingsPage() {
               {rows.map((listing) => (
                 <tr key={listing.id}>
                   <td>
-                    <div className="veh">
+                    <Link
+                      href={`/dashboard/listings/${listing.id}`}
+                      className="veh"
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
                       <div className="thumb" />
                       {listing.year} {listing.make} {listing.model}
-                    </div>
+                    </Link>
                   </td>
                   <td className="num">${listing.price.toLocaleString()}</td>
                   <td className="num">{listing.mileage.toLocaleString()} mi</td>
                   <td>
                     <span
                       className={`dl-pill ${
-                        listing.status === "posted" ? "dl-pill--live" : "dl-pill--draft"
+                        listing.status === "draft" ? "dl-pill--draft" : "dl-pill--live"
                       }`}
                     >
-                      {listing.status === "posted" ? "Posted" : "Draft"}
+                      {listing.status === "posted"
+                        ? "Posted"
+                        : listing.status === "sold"
+                          ? "Sold"
+                          : "Draft"}
                     </span>
                   </td>
                   <td>
