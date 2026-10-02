@@ -34,12 +34,51 @@
     console.log("[DealerLoft]", ...args);
   }
 
-  async function getPendingListing() {
+  async function getPendingPost() {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({ type: "DEALERLOFT_TAKE_PENDING_LISTING" }, (response) => {
-        resolve(response?.listing ?? null);
+        resolve({
+          listing: response?.listing ?? null,
+          token: response?.token ?? null,
+          callbackUrl: response?.callbackUrl ?? null,
+        });
       });
     });
+  }
+
+  // Tells DealerLoft the listing went live, so the dashboard can flip its
+  // "Posting…" pill to "Live on Facebook" without the dealer doing anything
+  // else. Best-effort: if this never fires (DealerLoft's token expires, the
+  // dealer closes the tab, whatever), the dealer can still see it went out
+  // on the Facebook side — DealerLoft just won't know automatically.
+  async function reportPosted(token, callbackUrl, externalUrl) {
+    if (!token || !callbackUrl) return false;
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { type: "DEALERLOFT_REPORT_POSTED", token, callbackUrl, externalUrl },
+        (response) => resolve(Boolean(response?.ok)),
+      );
+    });
+  }
+
+  // After a successful publish, Facebook moves off /marketplace/create/vehicle
+  // to the new listing's own page (something like /marketplace/item/<id>).
+  // Since this is a single-page app, our already-injected content script
+  // keeps running through that navigation — so watching location.href here
+  // catches it without needing a fresh page load. This is a heuristic (the
+  // exact URL shape isn't documented and can change), so it's paired with a
+  // manual "I published it" button in the banner as a fallback.
+  function watchForPublish(onPublished, timeoutMs = 5 * 60 * 1000) {
+    const start = Date.now();
+    const check = () => {
+      if (/\/marketplace\/item\//.test(location.pathname)) {
+        onPublished(location.href);
+        return;
+      }
+      if (Date.now() - start > timeoutMs) return; // give up quietly
+      setTimeout(check, 1000);
+    };
+    check();
   }
 
   async function waitForForm(timeoutMs = 10000) {
@@ -191,7 +230,7 @@
     return banner;
   }
 
-  function showSummary(results) {
+  function showSummary(results, onConfirmPublished) {
     const ok = results.filter((r) => r.ok).length;
     const banner = showBanner(`DealerLoft filled ${ok} of ${results.length} fields.`);
     const list = document.createElement("div");
@@ -201,18 +240,46 @@
       .join("<br>");
     banner.appendChild(list);
 
+    const status = document.createElement("div");
+    status.style.cssText = "margin-top:10px;font-weight:400;font-size:13px;opacity:.85";
+    status.textContent = "Review everything above, then click Facebook's own Publish button.";
+    banner.appendChild(status);
+
+    const row = document.createElement("div");
+    row.style.cssText = "margin-top:10px;display:flex;gap:8px;flex-wrap:wrap";
+
+    if (onConfirmPublished) {
+      const confirm = document.createElement("button");
+      confirm.textContent = "I clicked Publish";
+      confirm.style.cssText =
+        "background:#F4F5F7;border:none;color:#0E0F12;border-radius:6px;padding:4px 10px;cursor:pointer;font:600 13px inherit";
+      confirm.onclick = async () => {
+        confirm.disabled = true;
+        confirm.textContent = "Letting DealerLoft know…";
+        const ok = await onConfirmPublished(location.href);
+        status.textContent = ok
+          ? "DealerLoft marked this as posted."
+          : "Couldn't reach DealerLoft — it's still posted on Facebook, DealerLoft just won't show it automatically.";
+        confirm.remove();
+      };
+      row.appendChild(confirm);
+    }
+
     const dismiss = document.createElement("button");
     dismiss.textContent = "Dismiss";
     dismiss.style.cssText =
-      "margin-top:10px;background:none;border:1px solid rgba(255,255,255,.3);color:inherit;border-radius:6px;padding:4px 10px;cursor:pointer;font:inherit";
+      "background:none;border:1px solid rgba(255,255,255,.3);color:inherit;border-radius:6px;padding:4px 10px;cursor:pointer;font:inherit";
     dismiss.onclick = () => banner.remove();
-    banner.appendChild(dismiss);
+    row.appendChild(dismiss);
+
+    banner.appendChild(row);
 
     log("fill summary:", results);
+    return status;
   }
 
   async function run() {
-    const listing = await getPendingListing();
+    const { listing, token, callbackUrl } = await getPendingPost();
     if (!listing) return; // dealer just browsed here directly — nothing to do
 
     showBanner("DealerLoft is filling in this listing…");
@@ -233,7 +300,31 @@
     results.push(await tryFillText("Description", KEYWORDS.description, buildDescription(listing)));
     if (listing.photoUrls?.length) results.push(await tryAttachPhotos(listing.photoUrls));
 
-    showSummary(results);
+    let reported = false;
+    const confirmPublished = token && callbackUrl
+      ? async (externalUrl) => {
+          reported = true;
+          return reportPosted(token, callbackUrl, externalUrl);
+        }
+      : null;
+
+    const status = showSummary(results, confirmPublished);
+
+    // Best-effort auto-detect in parallel with the manual "I clicked
+    // Publish" button above — whichever happens first wins, and if the
+    // dealer already confirmed manually we don't double-report.
+    if (token && callbackUrl) {
+      watchForPublish(async (href) => {
+        if (reported) return;
+        reported = true;
+        const ok = await reportPosted(token, callbackUrl, href);
+        if (status) {
+          status.textContent = ok
+            ? "Looks like this went live — DealerLoft marked it as posted."
+            : "Looks like this went live, but DealerLoft couldn't be reached to record it.";
+        }
+      });
+    }
   }
 
   run().catch((err) => {
