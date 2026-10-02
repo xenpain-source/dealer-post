@@ -339,7 +339,7 @@ className="dl-textarea"
 </div>
 
 {listing.status !== "sold" && (
-<PostToMarketplaceButton listing={listing} photoUrls={photos} />
+<PostToMarketplaceButton listingId={listing.id} listing={listing} photoUrls={photos} />
 )}
 
 {error && <div className="dl-alert dl-alert--danger">{error}</div>}
