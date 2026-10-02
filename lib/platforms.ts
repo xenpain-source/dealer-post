@@ -11,8 +11,8 @@ export const platforms: Platform[] = [
   {
     id: "facebook",
     name: "Facebook Marketplace",
-    status: "planned",
-    note: "Requires an approved inventory partner integration.",
+    status: "in-progress",
+    note: "Fills in Facebook's own listing form via a free browser extension — you click Publish yourself.",
   },
   {
     id: "instagram",
