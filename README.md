@@ -54,6 +54,7 @@ Every push to `main` after that will auto-deploy.
 - A real database for listings and photos
 - Photo upload/storage
 - Craigslist and Instagram posting (no platform approval required to start)
-- Facebook Marketplace posting — this needs a business relationship with
-  an already-approved Facebook inventory partner; see project notes for
-  why direct approval isn't realistic for a new company yet
+- Facebook Marketplace posting — there's no public API for this, so it
+  works through a companion browser extension (see `extension/`) that
+  fills in Facebook's own listing form from a DealerLoft listing; the
+  dealer reviews it and clicks Facebook's own Publish button
