@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "DealerLoft Marketplace Assistant",
+  "version": "0.1.0",
+  "description": "Fills in a Facebook Marketplace vehicle listing from a DealerLoft listing, so you only have to review photos and details, then click Publish.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": [
+    "https://www.facebook.com/*",
+    "https://dealerloft.com/*",
+    "https://*.dealerloft.com/*",
+    "https://dealer-post-igy0aifr4-xen21.vercel.app/*",
+    "http://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://dealerloft.com/*",
+        "https://*.dealerloft.com/*",
+        "https://dealer-post-igy0aifr4-xen21.vercel.app/*",
+        "http://localhost:3000/*"
+      ],
+      "js": ["content-scripts/dealerloft-bridge.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.facebook.com/marketplace/create/*"],
+      "js": ["content-scripts/facebook-autofill.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
