@@ -20,7 +20,12 @@
     if (!data || data.source !== "dealerloft-app" || data.type !== "POST_TO_MARKETPLACE") return;
 
     chrome.runtime.sendMessage(
-      { type: "DEALERLOFT_POST_TO_MARKETPLACE", listing: data.listing },
+      {
+        type: "DEALERLOFT_POST_TO_MARKETPLACE",
+        listing: data.listing,
+        token: data.token,
+        callbackUrl: data.callbackUrl,
+      },
       (response) => {
         window.postMessage(
           {
