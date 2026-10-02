@@ -23,6 +23,11 @@ export function NewListingForm() {
       model: form.get("model"),
       mileage: String(form.get("mileage") ?? "").replace(/,/g, ""),
       price: String(form.get("price") ?? "").replace(/[$,]/g, ""),
+      vin: form.get("vin"),
+      bodyType: form.get("bodyType"),
+      stockNumber: form.get("stockNumber"),
+      cleanTitle: form.get("cleanTitle") === "on",
+      oneOwner: form.get("oneOwner") === "on",
       description: form.get("description"),
       photoUrls,
     };
@@ -113,6 +118,55 @@ export function NewListingForm() {
               />
             </div>
           </div>
+          <div className="dl-field">
+            <label htmlFor="bodyType" className="dl-label">
+              Body type
+            </label>
+            <select id="bodyType" name="bodyType" className="dl-select" defaultValue="">
+              <option value="" disabled>
+                Select a body type
+              </option>
+              <option value="Sedan">Sedan</option>
+              <option value="SUV">SUV</option>
+              <option value="Truck">Truck</option>
+              <option value="Coupe">Coupe</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div className="dl-field">
+            <label htmlFor="vin" className="dl-label">
+              VIN <span className="opt">(optional)</span>
+            </label>
+            <input
+              id="vin"
+              name="vin"
+              placeholder="1HGCV1F59KA012345"
+              maxLength={17}
+              className="dl-input dl-input--data"
+              style={{ textTransform: "uppercase" }}
+            />
+          </div>
+          <div className="dl-field">
+            <label htmlFor="stockNumber" className="dl-label">
+              Stock number <span className="opt">(optional)</span>
+            </label>
+            <input
+              id="stockNumber"
+              name="stockNumber"
+              placeholder="A-1042"
+              className="dl-input dl-input--data"
+            />
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-6">
+          <label className="dl-check">
+            <input id="cleanTitle" name="cleanTitle" type="checkbox" />
+            Clean title
+          </label>
+          <label className="dl-check">
+            <input id="oneOwner" name="oneOwner" type="checkbox" />
+            One owner
+          </label>
         </div>
       </div>
 
