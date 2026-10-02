@@ -42,6 +42,11 @@ export async function POST(request: Request) {
       model,
       mileage,
       price,
+      vin: body.vin ? String(body.vin).trim().toUpperCase() : null,
+      bodyType: body.bodyType ? String(body.bodyType) : null,
+      stockNumber: body.stockNumber ? String(body.stockNumber).trim() : null,
+      cleanTitle: Boolean(body.cleanTitle),
+      oneOwner: Boolean(body.oneOwner),
       description: String(body.description ?? ""),
       status: "draft",
     })
