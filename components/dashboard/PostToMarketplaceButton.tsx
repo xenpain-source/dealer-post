@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { DlLoader } from "./DlLoader";
 
 const EXTENSION_SOURCE_URL =
   "https://github.com/xenpain-source/dealer-post/tree/main/extension";
+
+// How long to keep auto-checking after the dealer clicks the button, before
+// settling into "still pending — check again" rather than polling forever.
+const POLL_INTERVAL_MS = 5000;
+const POLL_MAX_ATTEMPTS = 24; // ~2 minutes
 
 type MarketplaceListing = {
   year: number;
@@ -19,10 +25,14 @@ type MarketplaceListing = {
   description: string | null;
 };
 
+type ConnectionStatus = "idle" | "pending" | "posted" | "failed";
+
 export function PostToMarketplaceButton({
+  listingId,
   listing,
   photoUrls,
 }: {
+  listingId: string;
   listing: MarketplaceListing;
   photoUrls: string[];
 }) {
@@ -31,6 +41,43 @@ export function PostToMarketplaceButton({
   // most of the time we know within a tick — the timeout just keeps the
   // UI from guessing "not installed" before the script had a chance to run.
   const [installed, setInstalled] = useState<boolean | null>(null);
+  const [connection, setConnection] = useState<{
+    status: ConnectionStatus;
+    externalUrl: string | null;
+  }>({ status: "idle", externalUrl: null });
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/listings/${listingId}/platforms`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      const facebook = (data.connections ?? []).find(
+        (c: { platform: string }) => c.platform === "facebook",
+      );
+      if (facebook) {
+        setConnection({ status: facebook.status, externalUrl: facebook.externalUrl });
+      }
+      return facebook ?? null;
+    } catch {
+      return null;
+    }
+  }, [listingId]);
+
+  // Check once on load so a "Live on Facebook" pill survives a page refresh,
+  // and so re-opening a listing whose post is still in flight resumes
+  // polling instead of pretending nothing happened.
+  useEffect(() => {
+    fetchStatus().then((facebook) => {
+      if (facebook?.status === "pending") startPolling();
+    });
+    return () => {
+      if (pollTimer.current) clearTimeout(pollTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchStatus]);
 
   useEffect(() => {
     if (document.documentElement.dataset.dealerloftExtension === "installed") {
@@ -48,15 +95,50 @@ export function PostToMarketplaceButton({
     };
   }, []);
 
-  function handleClick() {
-    window.postMessage(
-      {
-        source: "dealerloft-app",
-        type: "POST_TO_MARKETPLACE",
-        listing: { ...listing, photoUrls },
-      },
-      window.location.origin,
-    );
+  function startPolling() {
+    let attempts = 0;
+    const tick = async () => {
+      attempts += 1;
+      const facebook = await fetchStatus();
+      if (facebook?.status === "pending" && attempts < POLL_MAX_ATTEMPTS) {
+        pollTimer.current = setTimeout(tick, POLL_INTERVAL_MS);
+      }
+    };
+    if (pollTimer.current) clearTimeout(pollTimer.current);
+    pollTimer.current = setTimeout(tick, POLL_INTERVAL_MS);
+  }
+
+  async function handleClick() {
+    setError(null);
+    setStarting(true);
+    try {
+      const res = await fetch(`/api/listings/${listingId}/platforms/facebook/start`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        setError("Couldn't start the post — try again.");
+        return;
+      }
+      const { token } = await res.json();
+
+      window.postMessage(
+        {
+          source: "dealerloft-app",
+          type: "POST_TO_MARKETPLACE",
+          listing: { ...listing, photoUrls },
+          token,
+          callbackUrl: `${window.location.origin}/api/platforms/facebook/callback`,
+        },
+        window.location.origin,
+      );
+
+      setConnection({ status: "pending", externalUrl: null });
+      startPolling();
+    } catch {
+      setError("Couldn't reach the server — check your connection and try again.");
+    } finally {
+      setStarting(false);
+    }
   }
 
   return (
@@ -87,7 +169,7 @@ export function PostToMarketplaceButton({
         </>
       )}
 
-      {installed === true && (
+      {installed === true && connection.status === "idle" && (
         <>
           <p className="dl-small mt-1">
             Opens a new tab on Facebook Marketplace with this listing&apos;s
@@ -97,12 +179,60 @@ export function PostToMarketplaceButton({
           <button
             type="button"
             onClick={handleClick}
+            disabled={starting}
             className="dl-btn dl-btn--primary w-fit mt-3"
           >
-            Post to Facebook Marketplace
+            {starting && <DlLoader />}
+            {starting ? "Starting…" : "Post to Facebook Marketplace"}
           </button>
         </>
       )}
+
+      {installed === true && connection.status === "pending" && (
+        <>
+          <p className="dl-small mt-1 flex items-center gap-1" aria-live="polite">
+            <DlLoader />
+            Waiting for you to finish on Facebook — review the listing in
+            that tab and click Facebook&apos;s own Publish button. This will
+            update on its own once it's live.
+          </p>
+          <button
+            type="button"
+            onClick={() => fetchStatus()}
+            className="dl-btn dl-btn--ghost w-fit mt-3"
+          >
+            Check now
+          </button>
+        </>
+      )}
+
+      {installed === true && connection.status === "posted" && (
+        <>
+          <p className="dl-small mt-1">✓ Live on Facebook Marketplace.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {connection.externalUrl && (
+              <a
+                href={connection.externalUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="dl-btn dl-btn--ghost w-fit"
+              >
+                View on Facebook
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={handleClick}
+              disabled={starting}
+              className="dl-btn dl-btn--ghost w-fit"
+            >
+              Post again
+            </button>
+          </div>
+        </>
+      )}
+
+      {error && <div className="dl-alert dl-alert--danger mt-3">{error}</div>}
     </div>
   );
 }
