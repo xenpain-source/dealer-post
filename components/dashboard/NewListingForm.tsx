@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { platforms } from "@/lib/platforms";
 import { PhotoUploader } from "@/components/dashboard/PhotoUploader";
+import { DlLoader } from "@/components/dashboard/DlLoader";
 
 export function NewListingForm() {
   const router = useRouter();
@@ -214,6 +215,7 @@ export function NewListingForm() {
       {error && <div className="dl-alert dl-alert--danger">{error}</div>}
 
       <button type="submit" disabled={submitting} className="dl-btn dl-btn--primary w-fit">
+        {submitting && <DlLoader />}
         {submitting ? "Saving…" : "Save listing"}
       </button>
     </form>
