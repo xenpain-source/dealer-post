@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { DlLoader } from "./DlLoader";
 import { Toast } from "./Toast";
+import { PostToMarketplaceButton } from "./PostToMarketplaceButton";
 
 type Listing = {
 id: string;
@@ -47,7 +48,13 @@ status,
 };
 }
 
-export function ListingDetailForm({ listing }: { listing: Listing }) {
+export function ListingDetailForm({
+listing,
+photos = [],
+}: {
+listing: Listing;
+photos?: string[];
+}) {
 const router = useRouter();
 const formRef = useRef<HTMLFormElement>(null);
 const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -330,6 +337,10 @@ defaultValue={listing.description ?? ""}
 className="dl-textarea"
 />
 </div>
+
+{listing.status !== "sold" && (
+<PostToMarketplaceButton listing={listing} photoUrls={photos} />
+)}
 
 {error && <div className="dl-alert dl-alert--danger">{error}</div>}
 
