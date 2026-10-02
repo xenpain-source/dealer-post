@@ -76,6 +76,12 @@ export const platformConnections = pgTable("platform_connections", {
   platform: text("platform").notNull(), // "facebook" | "instagram" | "craigslist"
   status: text("status").notNull().default("pending"), // "pending" | "posted" | "failed"
   externalUrl: text("external_url"),
+  // One-time token the browser extension hands back to confirm a post went
+  // through, since that callback comes from facebook.com with no DealerLoft
+  // login session attached — the token is the only thing authorizing it.
+  // Cleared (and expiry irrelevant) once the row reaches "posted"/"failed".
+  token: text("token"),
+  tokenExpiresAt: timestamp("token_expires_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
