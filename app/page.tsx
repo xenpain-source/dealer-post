@@ -37,8 +37,8 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="dl-container" style={{ paddingBlock: "var(--dl-space-24)" }}>
-          <div className="dl-golden">
+        <section className="dl-container dl-section">
+  <div className="dl-golden">
             <div className="grid gap-6 justify-items-start">
               <span className="dl-eyebrow">Free during beta</span>
               <h1 className="dl-display">
@@ -95,9 +95,8 @@ export default function Home() {
         {/* How it works */}
         <section
           id="how-it-works"
-          className="dl-container"
+          className="dl-container dl-section"
           style={{
-            paddingBlock: "var(--dl-space-24)",
             borderTop: "1px solid var(--border)",
           }}
         >
@@ -157,11 +156,7 @@ export default function Home() {
         </section>
 
         {/* Pricing */}
-        <section
-          id="pricing"
-          className="dl-container"
-          style={{ paddingBlock: "var(--dl-space-24)" }}
-        >
+        <section id="pricing" className="dl-container dl-section">
           <div className="grid gap-3 max-w-xl">
             <span className="dl-eyebrow">Pricing</span>
             <h2 className="dl-h2">Free while we&apos;re in beta.</h2>
@@ -201,10 +196,7 @@ export default function Home() {
 
         {/* Closing CTA */}
         <section style={{ borderTop: "1px solid var(--border)", background: "var(--surface)" }}>
-          <div
-            className="dl-container text-center grid gap-6 justify-items-center"
-            style={{ paddingBlock: "var(--dl-space-24)" }}
-          >
+          <div className="dl-container dl-section text-center grid gap-6 justify-items-center">
             <span className="dl-eyebrow">Free during beta</span>
             <h2 className="dl-h2 max-w-2xl">
               Get your lot on every channel this week.
