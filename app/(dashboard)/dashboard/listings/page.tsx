@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { desc, eq } from "drizzle-orm";
+import { asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { listings } from "@/lib/db/schema";
+import { listings, listingPhotos } from "@/lib/db/schema";
 import { getCurrentDealer } from "@/lib/db/dealer";
 import { ListingRowActions } from "@/components/dashboard/ListingRowActions";
 
@@ -17,6 +17,28 @@ export default async function ListingsPage() {
     .from(listings)
     .where(eq(listings.dealerId, dealer.id))
     .orderBy(desc(listings.createdAt));
+
+  // One extra query for the whole page rather than one per row: grab every
+  // photo for these listings, then keep only the first (lowest sortOrder)
+  // per listing to use as its thumbnail.
+  const coverPhotoByListing = new Map<string, string>();
+  if (rows.length > 0) {
+    const photos = await db
+      .select({ listingId: listingPhotos.listingId, url: listingPhotos.url })
+      .from(listingPhotos)
+      .where(
+        inArray(
+          listingPhotos.listingId,
+          rows.map((listing) => listing.id),
+        ),
+      )
+      .orderBy(asc(listingPhotos.sortOrder));
+    for (const photo of photos) {
+      if (!coverPhotoByListing.has(photo.listingId)) {
+        coverPhotoByListing.set(photo.listingId, photo.url);
+      }
+    }
+  }
 
   return (
     <div>
@@ -70,7 +92,17 @@ export default async function ListingsPage() {
                       className="veh"
                       style={{ textDecoration: "none", color: "inherit" }}
                     >
-                      <div className="thumb" />
+                      {coverPhotoByListing.has(listing.id) ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={coverPhotoByListing.get(listing.id)}
+                          alt=""
+                          className="thumb"
+                          style={{ objectFit: "cover" }}
+                        />
+                      ) : (
+                        <div className="thumb" />
+                      )}
                       {listing.year} {listing.make} {listing.model}
                     </Link>
                   </td>
