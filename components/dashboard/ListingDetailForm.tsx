@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { DlLoader } from "./DlLoader";
+import { Toast } from "./Toast";
 
 type Listing = {
 id: string;
@@ -25,34 +27,99 @@ const STATUSES: { value: Listing["status"]; label: string }[] = [
 { value: "sold", label: "Sold" },
 ];
 
+type AutosaveState = "idle" | "saving" | "saved" | "error";
+
+function readBody(form: HTMLFormElement, status: Listing["status"]) {
+const data = new FormData(form);
+return {
+year: data.get("year"),
+make: data.get("make"),
+model: data.get("model"),
+mileage: String(data.get("mileage") ?? "").replace(/,/g, ""),
+price: String(data.get("price") ?? "").replace(/[$,]/g, ""),
+vin: data.get("vin"),
+bodyType: data.get("bodyType"),
+stockNumber: data.get("stockNumber"),
+cleanTitle: data.get("cleanTitle") === "on",
+oneOwner: data.get("oneOwner") === "on",
+description: data.get("description"),
+status,
+};
+}
+
 export function ListingDetailForm({ listing }: { listing: Listing }) {
 const router = useRouter();
+const formRef = useRef<HTMLFormElement>(null);
+const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+const statusRef = useRef(listing.status);
+
 const [status, setStatus] = useState<Listing["status"]>(listing.status);
 const [saving, startSaving] = useTransition();
 const [deleting, startDeleting] = useTransition();
 const [error, setError] = useState<string | null>(null);
-const [justSaved, setJustSaved] = useState(false);
+const [autosave, setAutosave] = useState<AutosaveState>("idle");
+const [toast, setToast] = useState<string | null>(null);
+
+useEffect(() => {
+statusRef.current = status;
+}, [status]);
+
+// Clear the "Saved"/"error" indicator a couple seconds after it lands, so
+// it doesn't sit there forever once the dealer moves on.
+useEffect(() => {
+if (autosave === "saved" || autosave === "error") {
+const t = setTimeout(() => setAutosave("idle"), 2500);
+return () => clearTimeout(t);
+}
+}, [autosave]);
+
+useEffect(() => {
+return () => {
+if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+};
+}, []);
+
+async function runAutosave() {
+const form = formRef.current;
+if (!form) return;
+setAutosave("saving");
+try {
+const res = await fetch(`/api/listings/${listing.id}`, {
+method: "PATCH",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify(readBody(form, statusRef.current)),
+});
+setAutosave(res.ok ? "saved" : "error");
+} catch {
+setAutosave("error");
+}
+}
+
+function scheduleAutosave() {
+if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+autosaveTimer.current = setTimeout(runAutosave, 1500);
+}
+
+function handleFieldChange() {
+setError(null);
+scheduleAutosave();
+}
+
+function handleStatusChange(next: Listing["status"]) {
+setStatus(next);
+scheduleAutosave();
+}
 
 function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 event.preventDefault();
+if (autosaveTimer.current) {
+clearTimeout(autosaveTimer.current);
+autosaveTimer.current = null;
+}
 setError(null);
-setJustSaved(false);
 
-const form = new FormData(event.currentTarget);
-const body = {
-year: form.get("year"),
-make: form.get("make"),
-model: form.get("model"),
-mileage: String(form.get("mileage") ?? "").replace(/,/g, ""),
-price: String(form.get("price") ?? "").replace(/[$,]/g, ""),
-vin: form.get("vin"),
-bodyType: form.get("bodyType"),
-stockNumber: form.get("stockNumber"),
-cleanTitle: form.get("cleanTitle") === "on",
-oneOwner: form.get("oneOwner") === "on",
-description: form.get("description"),
-status,
-};
+const wasPosted = listing.status === "posted";
+const body = readBody(event.currentTarget, status);
 
 startSaving(async () => {
 const res = await fetch(`/api/listings/${listing.id}`, {
@@ -64,7 +131,8 @@ if (!res.ok) {
 setError("Couldn't save changes — try again.");
 return;
 }
-setJustSaved(true);
+setAutosave("saved");
+setToast(status === "posted" && !wasPosted ? "Listing published." : "Changes saved.");
 router.refresh();
 });
 }
@@ -88,7 +156,13 @@ router.refresh();
 const busy = saving || deleting;
 
 return (
-<form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-6">
+<>
+<form
+ref={formRef}
+onSubmit={handleSubmit}
+onChange={handleFieldChange}
+className="mt-6 flex flex-col gap-6"
+>
 <div className="dl-card">
 <h2 className="dl-h4">Status</h2>
 <p className="dl-small mt-1">
@@ -100,7 +174,7 @@ somewhere, or Sold once it&apos;s gone.
 <button
 key={s.value}
 type="button"
-onClick={() => setStatus(s.value)}
+onClick={() => handleStatusChange(s.value)}
 className={`dl-pill ${
 status === s.value ? "dl-pill--live" : "dl-pill--draft"
 }`}
@@ -265,9 +339,19 @@ type="submit"
 disabled={busy}
 className="dl-btn dl-btn--primary w-fit"
 >
+{saving && <DlLoader />}
 {saving ? "Saving…" : "Save changes"}
 </button>
-{justSaved && !saving && <span className="dl-small">Saved.</span>}
+<span className="dl-small flex items-center gap-1" aria-live="polite">
+{!saving && autosave === "saving" && (
+<>
+<DlLoader />
+Saving…
+</>
+)}
+{!saving && autosave === "saved" && "All changes saved"}
+{!saving && autosave === "error" && "Couldn't autosave — try Save changes"}
+</span>
 <button
 type="button"
 onClick={handleDelete}
@@ -275,9 +359,12 @@ disabled={busy}
 className="dl-btn dl-btn--ghost w-fit"
 style={{ color: "var(--danger-fg)", marginLeft: "auto" }}
 >
+{deleting && <DlLoader />}
 {deleting ? "Deleting…" : "Delete listing"}
 </button>
 </div>
 </form>
+{toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+</>
 );
 }
