@@ -196,7 +196,7 @@
 
 /* ---- Layout helpers ------------------------------------------------------- */
 .dl-container { max-width: var(--dl-container); margin-inline: auto; padding-inline: var(--dl-gutter); }
-.dl-golden { display: grid; grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr); gap: var(--dl-space-12); align-items: center; }
+.dl-golden { display: grid; grid-template-columns: minmax(0, 1.618fr) minmax(0, 1fr); gap: var(--dl-space-12); align-items: start; }
 @media (max-width: 860px) { .dl-golden { grid-template-columns: 1fr; } }
 
 @media (prefers-reduced-motion: reduce) { .dl-btn, .dl-toggle, .dl-toggle::after, .dl-input { transition: none; } }
