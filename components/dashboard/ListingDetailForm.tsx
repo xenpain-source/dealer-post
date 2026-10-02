@@ -10,6 +10,11 @@ make: string;
 model: string;
 mileage: number;
 price: number;
+vin: string | null;
+bodyType: string | null;
+stockNumber: string | null;
+cleanTitle: boolean;
+oneOwner: boolean;
 description: string | null;
 status: "draft" | "posted" | "sold";
 };
@@ -40,6 +45,11 @@ make: form.get("make"),
 model: form.get("model"),
 mileage: String(form.get("mileage") ?? "").replace(/,/g, ""),
 price: String(form.get("price") ?? "").replace(/[$,]/g, ""),
+vin: form.get("vin"),
+bodyType: form.get("bodyType"),
+stockNumber: form.get("stockNumber"),
+cleanTitle: form.get("cleanTitle") === "on",
+oneOwner: form.get("oneOwner") === "on",
 description: form.get("description"),
 status,
 };
@@ -177,6 +187,60 @@ className="dl-input dl-input--data"
 />
 </div>
 </div>
+<div className="dl-field">
+<label htmlFor="bodyType" className="dl-label">
+Body type
+</label>
+<select
+id="bodyType"
+name="bodyType"
+className="dl-select"
+defaultValue={listing.bodyType ?? ""}
+>
+<option value="" disabled>
+Select a body type
+</option>
+<option value="Sedan">Sedan</option>
+<option value="SUV">SUV</option>
+<option value="Truck">Truck</option>
+<option value="Coupe">Coupe</option>
+<option value="Other">Other</option>
+</select>
+</div>
+<div className="dl-field">
+<label htmlFor="vin" className="dl-label">
+VIN <span className="opt">(optional)</span>
+</label>
+<input
+id="vin"
+name="vin"
+maxLength={17}
+defaultValue={listing.vin ?? ""}
+className="dl-input dl-input--data"
+style={{ textTransform: "uppercase" }}
+/>
+</div>
+<div className="dl-field">
+<label htmlFor="stockNumber" className="dl-label">
+Stock number <span className="opt">(optional)</span>
+</label>
+<input
+id="stockNumber"
+name="stockNumber"
+defaultValue={listing.stockNumber ?? ""}
+className="dl-input dl-input--data"
+/>
+</div>
+</div>
+<div className="mt-4 flex flex-wrap gap-6">
+<label className="dl-check">
+<input id="cleanTitle" name="cleanTitle" type="checkbox" defaultChecked={listing.cleanTitle} />
+Clean title
+</label>
+<label className="dl-check">
+<input id="oneOwner" name="oneOwner" type="checkbox" defaultChecked={listing.oneOwner} />
+One owner
+</label>
 </div>
 </div>
 
