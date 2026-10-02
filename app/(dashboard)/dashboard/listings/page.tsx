@@ -4,7 +4,7 @@ import { asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { listings, listingPhotos } from "@/lib/db/schema";
 import { getCurrentDealer } from "@/lib/db/dealer";
-import { ListingRowActions } from "@/components/dashboard/ListingRowActions";
+import { ListingsTable } from "@/components/dashboard/ListingsTable";
 
 export const metadata: Metadata = {
   title: "Listings",
@@ -21,7 +21,7 @@ export default async function ListingsPage() {
   // One extra query for the whole page rather than one per row: grab every
   // photo for these listings, then keep only the first (lowest sortOrder)
   // per listing to use as its thumbnail.
-  const coverPhotoByListing = new Map<string, string>();
+  const coverPhotoByListing: Record<string, string> = {};
   if (rows.length > 0) {
     const photos = await db
       .select({ listingId: listingPhotos.listingId, url: listingPhotos.url })
@@ -34,8 +34,8 @@ export default async function ListingsPage() {
       )
       .orderBy(asc(listingPhotos.sortOrder));
     for (const photo of photos) {
-      if (!coverPhotoByListing.has(photo.listingId)) {
-        coverPhotoByListing.set(photo.listingId, photo.url);
+      if (!(photo.listingId in coverPhotoByListing)) {
+        coverPhotoByListing[photo.listingId] = photo.url;
       }
     }
   }
@@ -72,63 +72,21 @@ export default async function ListingsPage() {
           </Link>
         </div>
       ) : (
-        <div className="dl-table-wrap mt-6">
-          <table className="dl-table">
-            <thead>
-              <tr>
-                <th>Vehicle</th>
-                <th>Price</th>
-                <th>Mileage</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((listing) => (
-                <tr key={listing.id}>
-                  <td>
-                    <Link
-                      href={`/dashboard/listings/${listing.id}`}
-                      className="veh"
-                      style={{ textDecoration: "none", color: "inherit" }}
-                    >
-                      {coverPhotoByListing.has(listing.id) ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={coverPhotoByListing.get(listing.id)}
-                          alt=""
-                          className="thumb"
-                          style={{ objectFit: "cover" }}
-                        />
-                      ) : (
-                        <div className="thumb" />
-                      )}
-                      {listing.year} {listing.make} {listing.model}
-                    </Link>
-                  </td>
-                  <td className="num">${listing.price.toLocaleString()}</td>
-                  <td className="num">{listing.mileage.toLocaleString()} mi</td>
-                  <td>
-                    <span
-                      className={`dl-pill ${
-                        listing.status === "draft" ? "dl-pill--draft" : "dl-pill--live"
-                      }`}
-                    >
-                      {listing.status === "posted"
-                        ? "Posted"
-                        : listing.status === "sold"
-                          ? "Sold"
-                          : "Draft"}
-                    </span>
-                  </td>
-                  <td>
-                    <ListingRowActions listingId={listing.id} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ListingsTable
+          listings={rows.map((listing) => ({
+            id: listing.id,
+            year: listing.year,
+            make: listing.make,
+            model: listing.model,
+            price: listing.price,
+            mileage: listing.mileage,
+            status: listing.status,
+            vin: listing.vin,
+            stockNumber: listing.stockNumber,
+            createdAt: listing.createdAt.toISOString(),
+          }))}
+          coverPhotoByListing={coverPhotoByListing}
+        />
       )}
     </div>
   );
