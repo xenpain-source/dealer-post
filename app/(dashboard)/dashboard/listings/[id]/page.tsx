@@ -64,7 +64,7 @@ className="h-full w-full object-cover"
 </div>
 )}
 
-<ListingDetailForm listing={listing} />
+<ListingDetailForm listing={listing} photos={photos.map((photo) => photo.url)} />
 </div>
 );
 }
