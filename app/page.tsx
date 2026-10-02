@@ -38,7 +38,7 @@ export default function Home() {
       <main className="flex-1">
         {/* Hero */}
         <section className="dl-container dl-section">
-  <div className="dl-golden">
+          <div className="dl-golden">
             <div className="grid gap-6 justify-items-start">
               <span className="dl-eyebrow">Free during beta</span>
               <h1 className="dl-display">
