@@ -16,9 +16,9 @@ type View = "showroom" | "health";
 
 const CARS = [
   { name: "2019 Honda Accord EX-L", price: "$21,900", miles: "48,210 mi", status: "live", label: "Live", photo: null },
-  { name: "2020 Toyota RAV4 XLE", price: "$26,450", miles: "36,880 mi", status: "publishing", label: "Publishing", photo: "/marketing/showroom-rav4.jpg" },
+  { name: "2018 Toyota RAV4 LE", price: "$19,850", miles: "58,420 mi", status: "publishing", label: "Publishing", photo: "/marketing/showroom-rav4.jpg" },
   { name: "2017 Ford F-150 XLT", price: "$29,700", miles: "71,305 mi", status: "live", label: "Live", photo: "/marketing/showroom-f150.jpg" },
-  { name: "2020 Honda Civic Si", price: "$19,400", miles: "41,560 mi", status: "draft", label: "Draft", photo: "/marketing/showroom-civic.jpg" },
+  { name: "2021 Hyundai Elantra SEL", price: "$18,900", miles: "39,120 mi", status: "draft", label: "Draft", photo: "/marketing/showroom-elantra.jpg" },
 ] as const;
 
 const AGING = [
@@ -93,14 +93,18 @@ export function LotHealthShowcase({ accordPhoto }: { accordPhoto: string }) {
             <ul className="dl-showcase__cards" aria-hidden={view !== "showroom"} inert={view !== "showroom"}>
               {CARS.map((car) => (
                 <li key={car.name} className="dl-showcase__card">
+                  {/* Photo stays clean; the status pill sits with the title,
+                      as in the identity guide's listing card. */}
                   <div className="dl-showcase__photo">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={car.photo ?? accordPhoto} alt={car.name} loading="lazy" />
-                    <span className={`dl-pill dl-pill--${car.status}`}>{car.label}</span>
                   </div>
+                  {/* Title takes the free space, so the pill, price and
+                      mileage line up across cards whatever the title length. */}
                   <div className="dl-showcase__body">
-                    <b>{car.name}</b>
-                    <span className="dl-data">{car.price}</span>
+                    <b className="dl-showcase__title">{car.name}</b>
+                    <span className={`dl-pill dl-pill--${car.status}`}>{car.label}</span>
+                    <span className="dl-data dl-showcase__price">{car.price}</span>
                     <small className="dl-data">{car.miles}</small>
                   </div>
                 </li>
@@ -141,7 +145,7 @@ export function LotHealthShowcase({ accordPhoto }: { accordPhoto: string }) {
               </div>
               <div className="dl-showcase__todo">
                 <span className="dl-pill dl-pill--failed">72 days · Altima</span>
-                <span className="dl-pill dl-showcase__pill-warn">No photos · Civic</span>
+                <span className="dl-pill dl-showcase__pill-warn">No photos · Mazda3</span>
                 <span className="dl-pill dl-pill--draft">Not on Facebook · Sorento</span>
               </div>
             </div>
