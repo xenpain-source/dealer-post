@@ -54,7 +54,9 @@ export function AttractPanel() {
             />
           ))}
         </g>
-        <path d={MARK_PATH} fill="#FFFFFF" />
+        {/* Showroom, the same colour as the form side's background, so where
+            the panel crops the magnet it runs straight on into the page. */}
+        <path d={MARK_PATH} fill="var(--dl-showroom)" />
       </svg>
 
       <Link href="/" aria-label="DealerLoft home" className="relative w-fit">
