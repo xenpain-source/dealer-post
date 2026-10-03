@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DlLoader } from "./DlLoader";
 
-const EXTENSION_SOURCE_URL =
-  "https://github.com/xenpain-source/dealer-post/tree/main/extension";
+// Download + install steps for the extension (dashboard Extension page).
+const EXTENSION_PAGE_URL = "/dashboard/extension";
 
 // How long to keep auto-checking after the dealer clicks the button, before
 // settling into "still pending — check again" rather than polling forever.
@@ -224,14 +225,9 @@ export function PostToMarketplaceButton({
             browser extension installed first (it&apos;s not on the Chrome
             Web Store yet, so it&apos;s a quick manual install).
           </p>
-          <a
-            href={EXTENSION_SOURCE_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="dl-btn dl-btn--ghost w-fit mt-3"
-          >
+          <Link href={EXTENSION_PAGE_URL} className="dl-btn dl-btn--ghost w-fit mt-3">
             Get the extension
-          </a>
+          </Link>
         </>
       )}
 
