@@ -36,8 +36,9 @@ export default function Home() {
       <SiteHeader />
 
       <main className="flex-1">
-        {/* Hero */}
-        <section className="dl-container dl-section">
+        {/* Hero. Less space on top than a regular section: it sits right
+            under the header, not between two sections. */}
+        <section className="dl-container dl-section" style={{ paddingTop: "var(--dl-space-12)" }}>
           <div className="dl-golden">
             <div className="flex flex-col justify-between self-stretch">
               <div className="grid gap-6 justify-items-start">
