@@ -1,127 +1,179 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { listings } from "@/lib/db/schema";
+import { listings, listingPhotos, platformConnections, postingHistory } from "@/lib/db/schema";
 import { getCurrentDealer } from "@/lib/db/dealer";
+import { computeLotStats, type LotListing } from "@/lib/lot-stats";
+import { ShowroomView, type ShowroomFilter } from "@/components/dashboard/overview/ShowroomView";
+import { LotHealthView } from "@/components/dashboard/overview/LotHealthView";
 
 export const metadata: Metadata = {
   title: "Overview",
 };
 
-export default async function DashboardOverview() {
+type View = "showroom" | "health";
+
+const VIEWS: { key: View; label: string; href: string }[] = [
+  { key: "showroom", label: "Showroom", href: "/dashboard" },
+  { key: "health", label: "Lot health", href: "/dashboard?view=health" },
+];
+
+const FILTERS: ShowroomFilter[] = ["all", "posted", "draft", "sold"];
+
+export default async function DashboardOverview({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string; status?: string }>;
+}) {
+  const params = await searchParams;
+  const view: View = params.view === "health" ? "health" : "showroom";
+  const filter: ShowroomFilter = FILTERS.includes(params.status as ShowroomFilter)
+    ? (params.status as ShowroomFilter)
+    : "all";
+
   const { dealer } = await getCurrentDealer();
+  const now = new Date();
   const rows = await db
     .select()
     .from(listings)
     .where(eq(listings.dealerId, dealer.id))
     .orderBy(desc(listings.createdAt));
 
-  const posted = rows.filter((l) => l.status === "posted").length;
-  const drafts = rows.filter((l) => l.status === "draft").length;
-  const sold = rows.filter((l) => l.status === "sold").length;
-  const recent = rows.slice(0, 5);
+  const ids = rows.map((l) => l.id);
+  const coverByListing = new Map<string, string>();
+  const facebookByListing = new Map<string, LotListing["facebook"]>();
+  let facebookPostTimes: Date[] = [];
 
-  const stats = [
-    { k: "Total cars", v: rows.length },
-    { k: "Posted", v: posted },
-    { k: "Drafts", v: drafts },
-    { k: "Sold", v: sold },
-  ];
+  if (ids.length > 0) {
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const [photos, connections, history] = await Promise.all([
+      db
+        .select({ listingId: listingPhotos.listingId, url: listingPhotos.url })
+        .from(listingPhotos)
+        .where(inArray(listingPhotos.listingId, ids))
+        .orderBy(asc(listingPhotos.sortOrder)),
+      db
+        .select({
+          listingId: platformConnections.listingId,
+          status: platformConnections.status,
+          tokenExpiresAt: platformConnections.tokenExpiresAt,
+        })
+        .from(platformConnections)
+        .where(and(inArray(platformConnections.listingId, ids), eq(platformConnections.platform, "facebook"))),
+      db
+        .select({ createdAt: postingHistory.createdAt })
+        .from(postingHistory)
+        .where(
+          and(
+            inArray(postingHistory.listingId, ids),
+            eq(postingHistory.platform, "facebook"),
+            eq(postingHistory.action, "created"),
+            gte(postingHistory.createdAt, weekAgo),
+          ),
+        ),
+    ]);
+
+    // First photo by sortOrder is the cover.
+    for (const photo of photos) {
+      if (!coverByListing.has(photo.listingId)) coverByListing.set(photo.listingId, photo.url);
+    }
+    // Same rule as the platforms status route: a pending post only counts
+    // while its one-time token is still live.
+    for (const c of connections) {
+      if (c.status === "posted") facebookByListing.set(c.listingId, "posted");
+      else if (c.status === "pending" && c.tokenExpiresAt && c.tokenExpiresAt > now) {
+        facebookByListing.set(c.listingId, "publishing");
+      }
+    }
+    facebookPostTimes = history.map((h) => h.createdAt);
+  }
+
+  const lot: LotListing[] = rows.map((l) => ({
+    id: l.id,
+    year: l.year,
+    make: l.make,
+    model: l.model,
+    price: l.price,
+    mileage: l.mileage,
+    vin: l.vin,
+    bodyType: l.bodyType,
+    stockNumber: l.stockNumber,
+    cleanTitle: l.cleanTitle,
+    oneOwner: l.oneOwner,
+    status: l.status,
+    createdAt: l.createdAt,
+    coverUrl: coverByListing.get(l.id) ?? null,
+    facebook: facebookByListing.get(l.id) ?? null,
+  }));
+  const stats = computeLotStats(lot, facebookPostTimes, now);
 
   return (
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="dl-h1">Overview</h1>
-          <p className="dl-small mt-1">Your real inventory for {dealer.name}.</p>
+          <p className="dl-small mt-1">
+            {dealer.name} · {stats.unsoldCount} car{stats.unsoldCount === 1 ? "" : "s"} on the lot
+          </p>
         </div>
         <Link href="/dashboard/listings/new" className="dl-btn dl-btn--primary w-fit">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            className="h-4 w-4"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
+          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M12 5v14M5 12h14" />
           </svg>
           Add a car
         </Link>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.k} className="dl-card dl-stat">
-            <div className="k">{stat.k}</div>
-            <div className="v dl-data">{stat.v}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="dl-card mt-8">
-        <h2 className="dl-h4">Recent listings</h2>
-        <p className="dl-small mt-1">
-          A quick look at what&apos;s in your inventory right now.
-        </p>
-        {recent.length === 0 && (
-          <div className="dl-empty mt-4">
-            No cars yet —{" "}
-            <Link href="/dashboard/listings/new" className="dl-link">
-              add your first one
-            </Link>
-            .
-          </div>
-        )}
-        <div className="mt-4" style={{ borderTop: recent.length ? "1px solid var(--border)" : "none" }}>
-          {recent.map((listing) => (
-            <div
-              key={listing.id}
-              className="flex items-center justify-between gap-4 py-3"
-              style={{ borderBottom: "1px solid var(--border)" }}
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-semibold"
-                  style={{ background: "var(--accent)", color: "var(--accent-text, #fff)" }}
-                >
-                  {listing.make.slice(0, 1)}
-                  {listing.model.slice(0, 1)}
-                </div>
-                <p className="dl-body truncate" style={{ fontWeight: 500 }}>
-                  {listing.year} {listing.make} {listing.model}
-                </p>
-              </div>
-              <span
-                className={`dl-pill shrink-0 ${
-                  listing.status === "draft" ? "dl-pill--draft" : "dl-pill--live"
-                }`}
-              >
-                {listing.status === "posted"
-                  ? "Live"
-                  : listing.status === "sold"
-                    ? "Sold"
-                    : "Draft"}
-              </span>
-            </div>
-          ))}
+      {rows.length === 0 ? (
+        <div className="dl-card dl-empty mt-8">
+          <b>Your lot is empty.</b>
+          Add your first car and it shows up here with its photos, price and status.
+          <Link href="/dashboard/listings/new" className="dl-link">
+            Add a car
+          </Link>
         </div>
-        <Link href="/dashboard/listings" className="dl-link mt-4 inline-flex items-center gap-1">
-          View all listings
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            className="h-4 w-4"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+      ) : (
+        <>
+          <div
+            role="tablist"
+            aria-label="Overview view"
+            className="mt-6 inline-flex"
+            style={{ padding: 4, gap: 4, borderRadius: 999, background: "var(--surface-2)" }}
           >
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </Link>
-      </div>
+            {VIEWS.map((v) => {
+              const active = view === v.key;
+              return (
+                <Link
+                  key={v.key}
+                  href={v.href}
+                  role="tab"
+                  aria-selected={active}
+                  scroll={false}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 999,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    color: active ? "var(--text)" : "var(--text-muted)",
+                    background: active ? "var(--surface)" : "transparent",
+                    boxShadow: active ? "var(--shadow-sm)" : "none",
+                  }}
+                >
+                  {v.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {view === "health" ? (
+            <LotHealthView listings={lot} stats={stats} />
+          ) : (
+            <ShowroomView listings={lot} stats={stats} filter={filter} now={now} />
+          )}
+        </>
+      )}
     </div>
   );
 }
