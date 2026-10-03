@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
+import { LotHealthShowcase } from "@/components/marketing/LotHealthShowcase";
 
 // Sample vehicle photo for the hero mock listing card.
 const HERO_LISTING_PHOTO =
@@ -158,6 +159,9 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Dashboard showcase: Showroom flips to Lot health */}
+        <LotHealthShowcase accordPhoto={HERO_LISTING_PHOTO} />
+
         {/* Pricing */}
         <section id="pricing" className="dl-container dl-section">
           <div className="grid gap-3 max-w-xl">
@@ -204,14 +208,19 @@ export default function Home() {
             <h2 className="dl-h2 max-w-2xl">
               Get your lot on every channel this week.
             </h2>
-            <form className="flex w-full max-w-sm flex-col gap-2 sm:flex-row">
+            {/* Plain GET form: lands on sign-up with the email already filled
+                in (see app/signup), no JavaScript needed. */}
+            <form action="/signup" method="get" className="flex w-full max-w-sm flex-col gap-2 sm:flex-row">
               <input
                 type="email"
+                name="email"
                 placeholder="Work email"
+                aria-label="Work email"
+                autoComplete="email"
+                required
                 className="dl-input"
-                disabled
               />
-              <button type="submit" className="dl-btn dl-btn--primary" disabled>
+              <button type="submit" className="dl-btn dl-btn--primary">
                 Join the beta
               </button>
             </form>

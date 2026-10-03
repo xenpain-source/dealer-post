@@ -8,7 +8,16 @@ export const metadata: Metadata = {
   title: "Sign up — DealerLoft",
 };
 
-export default function SignUpPage() {
+export default async function SignUpPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string | string[] }>;
+}) {
+  // Pre-fill the email typed into the landing page's closing "Join the
+  // beta" form (it submits here as ?email=...).
+  const { email } = await searchParams;
+  const emailAddress = typeof email === "string" && email.length <= 254 ? email.trim() : undefined;
+
   return (
     <div
       className="flex-1 grid"
@@ -32,6 +41,7 @@ export default function SignUpPage() {
           </div>
 
           <SignUp
+            initialValues={emailAddress ? { emailAddress } : undefined}
             appearance={{
               elements: {
                 rootBox: "w-full",
