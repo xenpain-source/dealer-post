@@ -208,11 +208,14 @@ body {
 }
 .dl-showcase__photo { position: relative; aspect-ratio: 4 / 3; background: var(--border); }
 .dl-showcase__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.dl-showcase__body { display: grid; gap: 2px; padding: 10px 12px 12px; }
-/* Title and status pill share a row, wrapping on narrow cards. */
-.dl-showcase__head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 4px; }
-.dl-showcase__head b { font: 600 13px/1.3 var(--dl-font-display); }
-.dl-showcase__body > span { font-size: 16px; font-weight: 500; }
+/* Cards in a row stretch to the same height; the title grows to fill the
+   spare space, so the pill, price and mileage below it line up across
+   cards even when one title wraps to more lines. */
+.dl-showcase__card { display: flex; flex-direction: column; }
+.dl-showcase__body { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px 12px; }
+.dl-showcase__title { flex: 1; margin-bottom: 8px; font: 600 13px/1.3 var(--dl-font-display); }
+.dl-showcase__body .dl-pill { margin-bottom: 6px; }
+.dl-showcase__price { font-size: 16px; font-weight: 500; }
 .dl-showcase__body > small { font-size: 12px; color: var(--text-muted); }
 .dl-showcase__health {
   opacity: 0;

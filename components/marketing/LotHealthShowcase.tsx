@@ -99,12 +99,12 @@ export function LotHealthShowcase({ accordPhoto }: { accordPhoto: string }) {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={car.photo ?? accordPhoto} alt={car.name} loading="lazy" />
                   </div>
+                  {/* Title takes the free space, so the pill, price and
+                      mileage line up across cards whatever the title length. */}
                   <div className="dl-showcase__body">
-                    <div className="dl-showcase__head">
-                      <b>{car.name}</b>
-                      <span className={`dl-pill dl-pill--${car.status}`}>{car.label}</span>
-                    </div>
-                    <span className="dl-data">{car.price}</span>
+                    <b className="dl-showcase__title">{car.name}</b>
+                    <span className={`dl-pill dl-pill--${car.status}`}>{car.label}</span>
+                    <span className="dl-data dl-showcase__price">{car.price}</span>
                     <small className="dl-data">{car.miles}</small>
                   </div>
                 </li>
