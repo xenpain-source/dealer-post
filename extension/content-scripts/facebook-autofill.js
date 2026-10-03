@@ -14,6 +14,7 @@
 
 (function () {
   const KEYWORDS = {
+    vehicleType: ["vehicle type"],
     year: ["year"],
     make: ["make"],
     model: ["model"],
@@ -34,11 +35,13 @@
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  // Anything a value can actually go into. Facebook renders some of these
-  // fields (Description for sure, apparently Year/Price too) as
-  // contenteditable divs rather than real <input>/<textarea> elements — the
-  // same rich-text-editor pattern Facebook uses elsewhere on the site — so
-  // that has to count as a fillable control too, not just input/textarea.
+  // Anything a value can actually go into, OR a pure dropdown trigger with
+  // no text control of its own (Facebook renders Year/Body style/Vehicle
+  // type/Vehicle condition/Fuel type this way: a <label role="combobox">
+  // you click to open a listbox and pick an option — there's nothing to
+  // type into). contenteditable is kept here defensively — Facebook uses
+  // that pattern elsewhere on the site — even though as of this writing
+  // none of this form's fields actually render that way.
   const CONTROL_SELECTOR = 'input, textarea, [role="combobox"], [contenteditable="true"]';
 
   // Strict: the label text IS (near enough) just the keyword — "Price",
@@ -116,24 +119,51 @@
     return false;
   }
 
-  // Looks for a small bit of label text matching one of `keywords`, then
-  // walks up a few parent levels to find the nearest input/textarea/combobox
-  // that lives in the same field "block" as that label — this is how
-  // Facebook (and most React design systems) group a label with its control.
-  function findFieldContainer(keywords) {
-    const candidates = Array.from(document.querySelectorAll("label, span, div, p")).filter((el) => {
+  // The label's own visible text, with any nested control's content/value
+  // stripped out first — otherwise a filled-in field's typed value would
+  // get mixed into the text we're matching against.
+  function directLabelText(label) {
+    const clone = label.cloneNode(true);
+    clone.querySelectorAll(CONTROL_SELECTOR).forEach((n) => n.remove());
+    return normalize(clone.textContent);
+  }
+
+  // Finds the actual input/textarea/combobox for a field by its label text.
+  //
+  // Pass 1 (the one that matters): every field on this form is wrapped in a
+  // real <label> element together with its control — <label>Price<input/>
+  // </label> — so matching <label> text directly and reading the control
+  // straight out of it is exact, no guessing required. This specifically
+  // avoids a bug the previous version of this file had: Facebook also shows
+  // "Price" and "Description" as bold section headings (plain <div>s, not
+  // <label>s) above the real field, and matching those by accident sent the
+  // fill into whatever random control happened to be nearby.
+  //
+  // Pass 2: a looser div/span/p + short ancestor-climb fallback, kept only
+  // in case a future Facebook redesign stops using <label> for some field.
+  function findFieldControl(keywords) {
+    const labels = Array.from(document.querySelectorAll("label"));
+    for (const loose of [false, true]) {
+      for (const label of labels) {
+        const text = directLabelText(label);
+        if (!text || text.length > 40) continue;
+        if (!labelMatchesKeyword(text, keywords, { loose })) continue;
+        const control = label.matches(CONTROL_SELECTOR) ? label : label.querySelector(CONTROL_SELECTOR);
+        if (control) return control;
+      }
+    }
+
+    const candidates = Array.from(document.querySelectorAll("span, div, p")).filter((el) => {
       if (el.childElementCount > 2) return false; // skip big wrapper elements
       const text = normalize(el.textContent);
       return Boolean(text) && text.length <= 40;
     });
-
     for (const loose of [false, true]) {
       for (const el of candidates) {
         const text = normalize(el.textContent);
         if (!labelMatchesKeyword(text, keywords, { loose })) continue;
-
         let container = el;
-        for (let i = 0; i < 5 && container; i++) {
+        for (let i = 0; i < 3 && container; i++) {
           const control = container.querySelector(CONTROL_SELECTOR);
           if (control) return control;
           container = container.parentElement;
@@ -173,7 +203,7 @@
     el.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  // `control` is whatever findFieldContainer matched — an input/textarea, a
+  // `control` is whatever findFieldControl matched — an input/textarea, a
   // role="combobox" wrapper, or a contenteditable div. Resolves it down to
   // the actual thing text can go into and fills it, or returns null if
   // there's genuinely nothing typable inside.
@@ -191,57 +221,62 @@
     return input;
   }
 
-  async function tryFillText(fieldName, keywords, value) {
-    if (value === null || value === undefined || value === "") {
-      return { field: fieldName, ok: false, note: "no value to fill" };
-    }
-    const control = findFieldContainer(keywords);
-    if (!control) return { field: fieldName, ok: false, note: "field not found on page" };
-    const filled = setControlValue(control, String(value));
-    if (!filled) return { field: fieldName, ok: false, note: "found label but no editable field inside it" };
-    return { field: fieldName, ok: true, note: "filled" };
+  // True for a control like Year/Body style/Vehicle type/Vehicle condition/
+  // Fuel type: a <label role="combobox"> that IS the clickable trigger for
+  // a listbox, with no input/textarea/contenteditable of its own to type
+  // into — the only way to set a value is click it open, then click the
+  // matching [role="option"]. False for Make/Model/Price/Mileage, which are
+  // plain <input> elements despite some of them also carrying a
+  // role="combobox" ancestor in other Facebook form variants.
+  function isPureListboxTrigger(control) {
+    if (!control.matches('[role="combobox"]')) return false;
+    if (control.matches("input, textarea, [contenteditable=\"true\"]")) return false;
+    return !control.querySelector('input, textarea, [contenteditable="true"]');
   }
 
-  // Facebook's Year/Make/Model/Body style fields are almost certainly
-  // autocomplete comboboxes backed by their own vehicle database, not free
-  // text — so after typing, we also try to click a matching dropdown option.
-  async function tryFillCombo(fieldName, keywords, value) {
-    if (!value) return { field: fieldName, ok: false, note: "no value to fill" };
-    const control = findFieldContainer(keywords);
-    if (!control) return { field: fieldName, ok: false, note: "field not found on page" };
-
-    control.click();
-    await wait(150);
-    const input = control.matches("input") ? control : control.querySelector("input");
+  async function pollForOption(value, timeoutMs) {
     const target = normalize(String(value));
-    if (input) {
-      setNativeValue(input, String(value));
-      // Facebook's suggestion list is keystroke-driven, not just
-      // value-driven — a plain "input" event doesn't always trigger it.
-      // Nudge it with a trailing keyup so a listener that only watches
-      // keyboard events still fires. Harmless if it didn't need this.
-      input.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: String(value).slice(-1) || "a" }));
-    }
-
-    // Poll instead of one fixed 450ms wait — the suggestion list can take
-    // longer than that to show up, especially right after the page loads.
+    const deadline = Date.now() + timeoutMs;
     let option = null;
-    const deadline = Date.now() + 1500;
     while (Date.now() < deadline && !option) {
       option = Array.from(document.querySelectorAll('[role="option"]')).find((o) =>
         normalize(o.textContent).includes(target),
       );
-      if (!option) await wait(150);
+      if (!option) await wait(120);
     }
-    if (option) {
-      option.click();
-      await wait(150);
-      return { field: fieldName, ok: true, note: "filled and selected from dropdown" };
+    return option;
+  }
+
+  // Single entry point for every field. Finds the control by its label,
+  // then either drives it as a listbox (click trigger → wait for options →
+  // click the match) or fills it directly as text — whichever the control
+  // actually turns out to be, rather than assuming one or the other per
+  // field name. Make/Model have no dropdown on the current form at all
+  // (confirmed live — typing never produces any [role="option"]), so a
+  // plain fill is simply correct for them now; this also means the fill
+  // automatically adapts if Facebook adds or removes a dropdown later.
+  async function fillField(fieldName, keywords, value) {
+    if (value === null || value === undefined || value === "") {
+      return { field: fieldName, ok: false, note: "no value to fill" };
     }
-    if (input) {
-      return { field: fieldName, ok: true, note: "typed, but no matching dropdown option found — check it" };
+    const control = findFieldControl(keywords);
+    if (!control) return { field: fieldName, ok: false, note: "field not found on page" };
+
+    if (isPureListboxTrigger(control)) {
+      control.click();
+      const option = await pollForOption(value, 1500);
+      if (option) {
+        option.click();
+        await wait(150);
+        return { field: fieldName, ok: true, note: "selected from dropdown" };
+      }
+      control.click(); // close the dropdown again so it doesn't block the next field
+      return { field: fieldName, ok: false, note: `no matching dropdown option for "${value}"` };
     }
-    return { field: fieldName, ok: false, note: "couldn't type into this field" };
+
+    const filled = setControlValue(control, String(value));
+    if (!filled) return { field: fieldName, ok: false, note: "found label but no editable field inside it" };
+    return { field: fieldName, ok: true, note: "filled" };
   }
 
   // listing.price/mileage normally arrive as numbers straight from the
@@ -416,14 +451,29 @@
     }
 
     const results = [];
-    results.push(await tryFillText("Year", KEYWORDS.year, listing.year));
-    results.push(await tryFillCombo("Make", KEYWORDS.make, listing.make));
-    results.push(await tryFillCombo("Model", KEYWORDS.model, listing.model));
-    results.push(await tryFillText("Price", KEYWORDS.price, listing.price));
-    results.push(await tryFillText("Mileage", KEYWORDS.mileage, listing.mileage));
-    if (listing.bodyType) results.push(await tryFillCombo("Body style", KEYWORDS.bodyStyle, listing.bodyType));
-    if (listing.vin) results.push(await tryFillText("VIN", KEYWORDS.vin, listing.vin));
-    results.push(await tryFillText("Description", KEYWORDS.description, buildDescription(listing)));
+
+    // Facebook doesn't render vehicle-specific fields (Mileage, Body style,
+    // Vehicle condition, Fuel type...) until a Vehicle type is chosen — they
+    // simply aren't in the page yet. This has to run, and succeed, before
+    // anything else below, or those fields will always come back "not
+    // found on page" no matter how good the matching is. DealerLoft only
+    // lists cars/trucks today; listing.vehicleType can override the default
+    // if that ever changes.
+    const vehicleTypeResult = await fillField("Vehicle type", KEYWORDS.vehicleType, listing.vehicleType || "Car/Truck");
+    results.push(vehicleTypeResult);
+    if (vehicleTypeResult.ok) await wait(500); // let Facebook render the fields that depend on it
+
+    results.push(await fillField("Year", KEYWORDS.year, listing.year));
+    results.push(await fillField("Make", KEYWORDS.make, listing.make));
+    results.push(await fillField("Model", KEYWORDS.model, listing.model));
+    results.push(await fillField("Price", KEYWORDS.price, listing.price));
+    results.push(await fillField("Mileage", KEYWORDS.mileage, listing.mileage));
+    if (listing.bodyType) results.push(await fillField("Body style", KEYWORDS.bodyStyle, listing.bodyType));
+    // Facebook's own vehicle listing form has no VIN field at all, as of
+    // this writing — this is kept so it reports that clearly (rather than
+    // silently vanishing) and starts working on its own if Facebook adds one.
+    if (listing.vin) results.push(await fillField("VIN", KEYWORDS.vin, listing.vin));
+    results.push(await fillField("Description", KEYWORDS.description, buildDescription(listing)));
     if (listing.photoUrls?.length) results.push(await tryAttachPhotos(listing.photoUrls));
 
     let reported = false;
