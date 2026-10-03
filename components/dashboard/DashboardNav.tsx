@@ -38,6 +38,17 @@ const links = [
       />
     ),
   },
+  {
+    href: "/dashboard/extension",
+    label: "Extension",
+    icon: (
+      <path
+        d="M9 4h6v3a2 2 0 1 0 4 0V4h1v6h-3a2 2 0 1 0 0 4h3v6h-6v-3a2 2 0 1 0-4 0v3H4v-6h3a2 2 0 1 0 0-4H4V4h5Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
 ];
 
 export function DashboardNav() {

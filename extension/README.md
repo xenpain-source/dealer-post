@@ -12,21 +12,22 @@ background.
 
 ## Install it (one time, about 2 minutes)
 
-1. On this page, click the green **Code** button near the top, then click
-   **Download ZIP**.
+1. In DealerLoft, open **Extension** in the sidebar and click **Download
+   extension**.
 2. Find the downloaded file (usually in your Downloads folder) and unzip
    it — on Windows, right-click it and choose "Extract All"; on a Mac,
-   just double-click it.
+   just double-click it. Move the `dealerloft-extension` folder somewhere
+   it can stay, like Documents: Chrome loads it from there every time.
 3. Open Chrome and go to `chrome://extensions` (type that into the address
-   bar and press Enter).
+   bar and press Enter). Edge and Brave work too.
 4. In the top-right corner, turn on **Developer mode**.
 5. Click **Load unpacked** (top-left).
-6. In the folder picker, open the unzipped folder, then select the
-   `extension` folder inside it (not the whole project — just the
-   `extension` folder), and click **Select Folder** (or **Open**).
+6. Select the `dealerloft-extension` folder and click **Select Folder**
+   (or **Open**).
 
 You should now see "DealerLoft Marketplace Assistant" in your list of
-extensions. That's it — nothing else to configure.
+extensions, and DealerLoft's Extension page shows it as Installed. That's
+it — nothing else to configure.
 
 ## Using it
 
@@ -47,8 +48,11 @@ they are and we'll fix it.
 
 ## Updating it later
 
-If we send you a new version, repeat the install steps above with the new
-ZIP file (Chrome will treat it as an update to the same extension).
+DealerLoft's Extension page tells you when a newer version is out.
+Download it, unzip it, and replace the files in your existing
+`dealerloft-extension` folder. Then click the reload arrow on the
+extension's card in `chrome://extensions`. Keep using the same folder:
+Chrome treats a different folder as a different extension.
 
 ## Uninstalling it
 

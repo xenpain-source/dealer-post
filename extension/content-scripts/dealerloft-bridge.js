@@ -1,14 +1,21 @@
-// Runs on the DealerLoft app itself. Its only two jobs:
-//   1. Tell the page the extension is installed (so the "Post to Facebook
-//      Marketplace" button can show up instead of install instructions).
+// Runs on the DealerLoft app itself. Its jobs:
+//   1. Tell the page the extension is installed, and which version (so the
+//      "Post to Facebook Marketplace" button can show up instead of install
+//      instructions, and the Extension page can flag an outdated copy).
 //   2. Relay the one message that button sends into the extension's
 //      background service worker.
+//   3. Pass back the two outcomes of a post in flight: published, or the
+//      Facebook tab closed without publishing.
 //
-// It never reads anything else from the page, and the page never gets
-// anything back except the "I'm here" signal below.
+// It never reads anything else from the page.
 
 (function () {
   document.documentElement.setAttribute("data-dealerloft-extension", "installed");
+  // Lets the dashboard's Extension page say whether this copy is up to date.
+  document.documentElement.setAttribute(
+    "data-dealerloft-extension-version",
+    chrome.runtime.getManifest().version,
+  );
   window.dispatchEvent(new CustomEvent("dealerloft-extension-ready"));
 
   window.addEventListener("message", (event) => {
