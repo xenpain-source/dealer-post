@@ -184,33 +184,21 @@ export function NewListingForm() {
         />
       </div>
 
-      <fieldset className="dl-card">
-        <legend className="dl-h4">Post to</legend>
+      <div className="dl-card">
+        <h2 className="dl-h4">Post to</h2>
         <p className="dl-small mt-1">
-          Platform posting isn&apos;t connected yet — this saves the listing
-          as a draft you can post manually for now.
+          This saves the listing as a draft first. Once it&apos;s saved,
+          open it from the Listings page to post it — each channel below
+          shows up there with its own status.
         </p>
-        <div className="mt-3 flex flex-col gap-2">
+        <ul className="mt-3 flex flex-col gap-1 dl-small">
           {platforms.map((platform) => (
-            <label
-              key={platform.id}
-              htmlFor={`platform-${platform.id}`}
-              className="dl-channel"
-              style={{ cursor: "not-allowed" }}
-            >
-              <input
-                id={`platform-${platform.id}`}
-                name="platforms"
-                type="checkbox"
-                disabled
-                className="dl-check"
-                style={{ width: 18, height: 18 }}
-              />
-              <span className="name">{platform.name}</span>
-            </label>
+            <li key={platform.id}>
+              <b>{platform.name}:</b> {platform.note}
+            </li>
           ))}
-        </div>
-      </fieldset>
+        </ul>
+      </div>
 
       {error && <div className="dl-alert dl-alert--danger">{error}</div>}
 
