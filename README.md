@@ -1,22 +1,29 @@
 # Dealer Post
 
-Skeleton for a tool that lets small used-car dealers post their inventory
-to multiple places (Facebook Marketplace, Instagram, Craigslist, etc.)
-from one place, instead of retyping each listing by hand.
+A tool that lets small used-car dealers post their inventory to multiple
+places (Facebook Marketplace, Instagram, Craigslist, etc.) from one place,
+instead of retyping each listing by hand.
 
-This is an early structural skeleton, not a working product yet. Nothing
-is wired up to a real database, real auth, or any posting platform —
-those come next. Right now it's the shape of the app: a marketing page,
-a login screen, and a dashboard with placeholder data.
+Real auth (Clerk), a real database (Neon/Postgres via Drizzle), and real
+photo storage (Cloudflare R2) are all wired up — see `SETUP.md` for getting
+your own free-tier accounts connected. Facebook Marketplace posting works
+today through a companion browser extension (see `extension/`) that fills
+in Facebook's own listing form from a DealerLoft listing; the dealer
+reviews it and clicks Facebook's own Publish button themselves. Instagram
+and Craigslist posting aren't built yet — see "Next steps" below.
 
 ## What's here
 
 - `app/page.tsx` — marketing landing page
-- `app/login` — placeholder login screen
-- `app/(dashboard)/dashboard` — placeholder dashboard (overview, listings
-  table, "add a car" form)
-- `lib/listings.ts` — sample listing data (stand-in for a real database)
+- `app/login`, `app/signup` — Clerk-hosted auth screens
+- `app/(dashboard)/dashboard` — the dealer app (overview, listings table,
+  listing detail/edit, "add a car" form)
+- `app/api` — listings CRUD, photo upload presigning, and the Facebook
+  posting handoff/callback routes
+- `lib/db/schema.ts` — the real Drizzle/Postgres schema (dealers, users,
+  listings, photos, platform connections, posting history)
 - `lib/platforms.ts` — list of target platforms and their status
+- `extension/` — the Facebook Marketplace Assistant browser extension
 
 ## Running it locally
 
@@ -25,36 +32,26 @@ npm install
 npm run dev
 ```
 
-Then open http://localhost:3000.
-
-## Pushing this to GitHub
-
-From inside this folder:
-
-```bash
-git remote add origin https://github.com/<your-username>/<repo-name>.git
-git branch -M main
-git push -u origin main
-```
-
-(Create the empty repo on GitHub first, without a README, so there's
-nothing to conflict with.)
+Then open http://localhost:3000. You'll need real Neon/Clerk/R2 credentials
+in `.env.local` first — see `SETUP.md` for the full walkthrough (free,
+about 10 minutes).
 
 ## Deploying to Vercel
 
-1. Go to vercel.com and click "Add New Project."
-2. Import the GitHub repo you just pushed.
-3. Leave the defaults (Vercel auto-detects Next.js) and click Deploy.
-
-Every push to `main` after that will auto-deploy.
+The code is already pushed to GitHub and set up to auto-deploy via Vercel
+on every push to `main`. The live site needs its own copy of the env vars
+from `.env.local` (Vercel -> Settings -> Environment Variables) — see
+`SETUP.md` step 5.
 
 ## Next steps
 
-- Real authentication (dealer accounts, sessions)
-- A real database for listings and photos
-- Photo upload/storage
-- Craigslist and Instagram posting (no platform approval required to start)
-- Facebook Marketplace posting — there's no public API for this, so it
-  works through a companion browser extension (see `extension/`) that
-  fills in Facebook's own listing form from a DealerLoft listing; the
-  dealer reviews it and clicks Facebook's own Publish button
+- Instagram posting — needs the Meta Graph API, a Business/Creator IG
+  account, and Meta App Review (the review queue is the slow part, not
+  the code)
+- Craigslist posting — no public API; a manual-assist flow (pre-filled
+  copy/paste) is the easy first version
+- A Settings/Channels page to manage connections in one place
+- A unified inbox across all connected channels
+
+See `SETUP.md` for getting the app running on real accounts, and the
+project roadmap doc for the full build-order/status tracking.
