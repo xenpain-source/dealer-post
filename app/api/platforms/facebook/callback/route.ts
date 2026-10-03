@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { and, eq, gt } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { platformConnections, postingHistory } from "@/lib/db/schema";
+import { listings, platformConnections, postingHistory } from "@/lib/db/schema";
 
 // Called by the DealerLoft Marketplace Assistant browser extension — from
 // facebook.com, not from this app — once it sees the dealer's listing go
@@ -41,6 +41,13 @@ export async function POST(request: Request) {
     .update(platformConnections)
     .set({ status: "posted", externalUrl, token: null, tokenExpiresAt: null })
     .where(eq(platformConnections.id, connection.id));
+
+  // Being on Marketplace is what "Live" means, so a draft flips to Live here
+  // too. Only from draft — never un-sell a listing the dealer marked Sold.
+  await db
+    .update(listings)
+    .set({ status: "posted" })
+    .where(and(eq(listings.id, connection.listingId), eq(listings.status, "draft")));
 
   await db.insert(postingHistory).values({
     listingId: connection.listingId,
