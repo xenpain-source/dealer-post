@@ -10,7 +10,37 @@
 const PENDING_KEY = "dealerloft_pending_listing";
 const PENDING_TTL_MS = 5 * 60 * 1000; // 5 minutes — stale data is dropped, not filled in
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+// Which Facebook tab belongs to the post in flight, and which DealerLoft tab
+// started it. Kept in storage rather than a variable because Chrome can stop
+// this service worker at any time between events.
+const TRACKED_KEY = "dealerloft_tracked_tabs";
+
+// If the dealer closes the Facebook tab before the post is reported as
+// published, tell the DealerLoft tab so it stops waiting and offers a retry.
+chrome.tabs.onRemoved.addListener((tabId) => {
+  chrome.storage.local.get(TRACKED_KEY, (result) => {
+    const tracked = result[TRACKED_KEY];
+    if (!tracked || tracked.facebookTabId !== tabId) return;
+    chrome.storage.local.remove(TRACKED_KEY);
+    chrome.tabs.sendMessage(tracked.dealerloftTabId, { type: "DEALERLOFT_FACEBOOK_TAB_CLOSED" }, () => {
+      void chrome.runtime.lastError; // DealerLoft tab already gone — nothing to tell
+    });
+  });
+});
+
+// Message payloads have to be JSON-serializable, so photo bytes travel to
+// the content script as base64. Chunked so String.fromCharCode doesn't blow
+// the argument limit on multi-megabyte photos.
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "DEALERLOFT_POST_TO_MARKETPLACE") {
     const payload = {
       listing: message.listing,
@@ -19,7 +49,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       storedAt: Date.now(),
     };
     chrome.storage.local.set({ [PENDING_KEY]: payload }, () => {
-      chrome.tabs.create({ url: "https://www.facebook.com/marketplace/create/vehicle" });
+      chrome.tabs.create({ url: "https://www.facebook.com/marketplace/create/vehicle" }, (tab) => {
+        if (tab?.id != null && sender.tab?.id != null) {
+          chrome.storage.local.set({
+            [TRACKED_KEY]: { facebookTabId: tab.id, dealerloftTabId: sender.tab.id },
+          });
+        }
+      });
       sendResponse({ ok: true });
     });
     return true; // keep the message channel open for the async sendResponse
@@ -56,7 +92,32 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, externalUrl: externalUrl ?? null }),
     })
-      .then((res) => sendResponse({ ok: res.ok }))
+      .then((res) => {
+        // Posted — closing the Facebook tab from now on is not an abandon.
+        if (res.ok) chrome.storage.local.remove(TRACKED_KEY);
+        sendResponse({ ok: res.ok });
+      })
+      .catch((err) => sendResponse({ ok: false, error: String(err) }));
+    return true;
+  }
+
+  // The Facebook-side content script can't fetch dealer photos itself: its
+  // requests carry facebook.com's origin, and the photo host (R2) sends no
+  // CORS headers allowing that. The service worker's own fetch isn't
+  // CORS-restricted for hosts listed in host_permissions, so it downloads
+  // the photo here and hands the bytes back.
+  if (message?.type === "DEALERLOFT_FETCH_PHOTO") {
+    const { url } = message;
+    if (typeof url !== "string" || !/^https?:\/\//.test(url)) {
+      sendResponse({ ok: false, error: "invalid photo url" });
+      return;
+    }
+    fetch(url)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`fetch failed (${res.status})`);
+        const type = res.headers.get("content-type") || "image/jpeg";
+        sendResponse({ ok: true, type, base64: arrayBufferToBase64(await res.arrayBuffer()) });
+      })
       .catch((err) => sendResponse({ ok: false, error: String(err) }));
     return true;
   }

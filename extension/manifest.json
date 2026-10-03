@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DealerLoft Marketplace Assistant",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Fills in a Facebook Marketplace vehicle listing from a DealerLoft listing, so you only have to review photos and details, then click Publish.",
   "permissions": ["storage", "tabs"],
   "host_permissions": [
@@ -9,7 +9,8 @@
     "https://dealerloft.com/*",
     "https://*.dealerloft.com/*",
     "https://dealer-post-igy0aifr4-xen21.vercel.app/*",
-    "http://localhost:3000/*"
+    "http://localhost:3000/*",
+    "https://*.r2.dev/*"
   ],
   "background": {
     "service_worker": "background.js"

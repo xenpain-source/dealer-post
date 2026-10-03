@@ -46,8 +46,17 @@ export function PostToMarketplaceButton({
     externalUrl: string | null;
   }>({ status: "idle", externalUrl: null });
   const [starting, setStarting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  // Polling gave up while the post was still pending — stop showing a
+  // spinner and ask the dealer instead.
+  const [waitTimedOut, setWaitTimedOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const statusRef = useRef<ConnectionStatus>("idle");
+
+  useEffect(() => {
+    statusRef.current = connection.status;
+  }, [connection.status]);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -95,17 +104,49 @@ export function PostToMarketplaceButton({
     };
   }, []);
 
+  // The extension tells us when the dealer closes the Facebook tab without
+  // publishing, so the card can drop straight back to a clean retry.
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (event.source !== window || event.origin !== window.location.origin) return;
+      const data = event.data;
+      if (data?.source !== "dealerloft-extension" || data.type !== "FACEBOOK_TAB_CLOSED") return;
+      if (statusRef.current === "pending") cancelPost();
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function startPolling() {
     let attempts = 0;
+    setWaitTimedOut(false);
     const tick = async () => {
       attempts += 1;
       const facebook = await fetchStatus();
-      if (facebook?.status === "pending" && attempts < POLL_MAX_ATTEMPTS) {
+      if (facebook?.status !== "pending") return;
+      if (attempts < POLL_MAX_ATTEMPTS) {
         pollTimer.current = setTimeout(tick, POLL_INTERVAL_MS);
+      } else {
+        setWaitTimedOut(true);
       }
     };
     if (pollTimer.current) clearTimeout(pollTimer.current);
     pollTimer.current = setTimeout(tick, POLL_INTERVAL_MS);
+  }
+
+  async function cancelPost() {
+    if (pollTimer.current) clearTimeout(pollTimer.current);
+    setCancelling(true);
+    try {
+      await fetch(`/api/listings/${listingId}/platforms/facebook/cancel`, { method: "POST" });
+    } catch {
+      // Best-effort: the server also gives up on its own once the token expires.
+    } finally {
+      setCancelling(false);
+      setWaitTimedOut(false);
+      setConnection({ status: "idle", externalUrl: null });
+    }
   }
 
   async function handleClick() {
@@ -190,19 +231,37 @@ export function PostToMarketplaceButton({
 
       {installed === true && connection.status === "pending" && (
         <>
-          <p className="dl-small mt-1 flex items-center gap-1" aria-live="polite">
-            <DlLoader />
-            Waiting for you to finish on Facebook — review the listing in
-            that tab and click Facebook&apos;s own Publish button. This will
-            update on its own once it's live.
-          </p>
-          <button
-            type="button"
-            onClick={() => fetchStatus()}
-            className="dl-btn dl-btn--ghost w-fit mt-3"
-          >
-            Check now
-          </button>
+          {waitTimedOut ? (
+            <p className="dl-small mt-1" aria-live="polite">
+              Haven&apos;t heard back from Facebook yet. If you published it,
+              click Check now — otherwise cancel and start over.
+            </p>
+          ) : (
+            <p className="dl-small mt-1 flex items-center gap-1" aria-live="polite">
+              <DlLoader />
+              Waiting for you to finish on Facebook — review the listing in
+              that tab and click Facebook&apos;s own Publish button. This will
+              update on its own once it&apos;s live.
+            </p>
+          )}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => fetchStatus()}
+              className="dl-btn dl-btn--ghost w-fit"
+            >
+              Check now
+            </button>
+            <button
+              type="button"
+              onClick={cancelPost}
+              disabled={cancelling}
+              className="dl-btn dl-btn--ghost w-fit"
+            >
+              {cancelling && <DlLoader />}
+              {cancelling ? "Cancelling…" : "Cancel"}
+            </button>
+          </div>
         </>
       )}
 

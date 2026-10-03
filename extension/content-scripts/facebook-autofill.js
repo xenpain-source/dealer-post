@@ -335,16 +335,31 @@
     return [headline, existing, factsLine, closing, idLine].filter(Boolean).join("\n\n");
   }
 
+  // A plain fetch() from here is blocked by CORS (this script runs with
+  // facebook.com's origin), so the background service worker downloads the
+  // photo and sends the bytes back as base64.
+  function fetchPhotoViaBackground(url) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type: "DEALERLOFT_FETCH_PHOTO", url }, (response) => {
+        if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
+        if (!response?.ok) return reject(new Error(response?.error || "photo fetch failed"));
+        const binary = atob(response.base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        resolve(new Blob([bytes], { type: response.type }));
+      });
+    });
+  }
+
   async function tryAttachPhotos(urls) {
     const fileInput = document.querySelector('input[type="file"]');
     if (!fileInput) return { field: "photos", ok: false, note: "no photo upload field found on page" };
 
     let attached = 0;
+    let firstError = null;
     for (const url of urls.slice(0, 10)) {
       try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`fetch failed (${res.status})`);
-        const blob = await res.blob();
+        const blob = await fetchPhotoViaBackground(url);
         const filename = url.split("/").pop()?.split("?")[0] || "photo.jpg";
         const file = new File([blob], filename, { type: blob.type || "image/jpeg" });
         const dt = new DataTransfer();
@@ -355,13 +370,20 @@
         await wait(1200); // give Facebook's own uploader time before adding the next one
       } catch (err) {
         log("couldn't attach photo", url, err);
+        if (!firstError) {
+          let host = url;
+          try {
+            host = new URL(url).host;
+          } catch {}
+          firstError = `${host}: ${err?.message || err}`;
+        }
       }
     }
     if (attached === 0) {
       return {
         field: "photos",
         ok: false,
-        note: "couldn't download any photos to attach (likely blocked by the photo host) — add them manually",
+        note: `couldn't download any photos to attach (${firstError}) — add them manually`,
       };
     }
     return { field: "photos", ok: attached === urls.length, note: `${attached} of ${urls.length} attached` };

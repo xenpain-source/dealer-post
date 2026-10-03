@@ -38,4 +38,14 @@
       },
     );
   });
+
+  // The background worker saw the dealer close the Facebook tab before
+  // publishing — pass that on so the page can stop waiting.
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message?.type !== "DEALERLOFT_FACEBOOK_TAB_CLOSED") return;
+    window.postMessage(
+      { source: "dealerloft-extension", type: "FACEBOOK_TAB_CLOSED" },
+      window.location.origin,
+    );
+  });
 })();
