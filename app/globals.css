@@ -72,10 +72,20 @@ body {
 }
 
 /* Auth brand panel (components/brand/AttractPanel.tsx). */
+/* Exactly one screen tall and pinned while the form scrolls, so the logo,
+   magnet and slogan always fit the visible window. Without this the panel
+   stretched to the height of the (taller) sign-up form, pushing the slogan
+   below the fold and blowing the magnet up, especially at 125-150% Windows
+   display scaling. */
 .dl-auth-panel {
   background: var(--bg);
   color: var(--text);
   isolation: isolate;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  height: 100dvh;
 }
 .dl-auth-panel__art {
   position: absolute;
@@ -98,10 +108,10 @@ body {
     linear-gradient(0deg, var(--bg) 6%, color-mix(in srgb, var(--bg) 85%, transparent) 22%, transparent 40%);
 }
 /* Identity guide display: Outfit 600, 56/56, -3%, scaled down to fit
-   narrower panels. */
+   narrower or shorter windows. */
 .dl-auth-panel__slogan {
   color: var(--text);
-  font-size: clamp(2.5rem, 4.4vw, 3.5rem);
+  font-size: clamp(2.5rem, min(4.4vw, 7vh), 3.5rem);
   line-height: 1;
 }
 /* Product line under the slogan, set as in the identity guide's hero. */
