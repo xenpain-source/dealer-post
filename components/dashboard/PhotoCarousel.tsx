@@ -24,9 +24,12 @@ export function PhotoCarousel({
   frameStyle?: React.CSSProperties; // extra styles for the main photo frame
   children?: ReactNode;
 }) {
-  const [index, setIndex] = useState(0);
+  const [rawIndex, setIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
   const count = photos.length;
+  // Photos can be removed while this is showing (the listing page edits
+  // them live), so never point past the end.
+  const index = count ? Math.min(rawIndex, count - 1) : 0;
   const multiple = count > 1;
 
   // Warm the next photo so the arrow feels instant.
@@ -37,7 +40,7 @@ export function PhotoCarousel({
   }, [index, count, multiple, photos]);
 
   function go(delta: number) {
-    setIndex((i) => (i + delta + count) % count);
+    setIndex((index + delta + count) % count);
   }
 
   function arrow(delta: number) {

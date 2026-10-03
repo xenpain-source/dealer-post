@@ -5,7 +5,6 @@ import { db } from "@/lib/db/client";
 import { listings, listingPhotos } from "@/lib/db/schema";
 import { getCurrentDealer } from "@/lib/db/dealer";
 import { ListingDetailForm } from "@/components/dashboard/ListingDetailForm";
-import { PhotoCarousel } from "@/components/dashboard/PhotoCarousel";
 import { vehicleName } from "@/lib/lot-stats";
 
 export const metadata: Metadata = {
@@ -35,26 +34,14 @@ const photos = await db
 .where(eq(listingPhotos.listingId, id))
 .orderBy(asc(listingPhotos.sortOrder));
 
-const name = vehicleName(listing);
-
 return (
 <div className="max-w-2xl">
-<h1 className="dl-h1">{name}</h1>
+<h1 className="dl-h1">{vehicleName(listing)}</h1>
 <p className="dl-small mt-1">
-Edit the details, update its status, or remove it.
+Edit the details and photos, update its status, or remove it.
 </p>
 
-{photos.length > 0 && (
-<div className="mt-6">
-<PhotoCarousel
-photos={photos.map((photo) => photo.url)}
-label={name}
-thumbnails
-frameStyle={{ borderRadius: "var(--dl-radius-lg)", border: "1px solid var(--border)" }}
-/>
-</div>
-)}
-
+{/* Photos (viewer + reorder/upload) live in the form's first card. */}
 <ListingDetailForm listing={listing} photos={photos.map((photo) => photo.url)} />
 </div>
 );
