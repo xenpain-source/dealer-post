@@ -31,10 +31,14 @@ export function PostToMarketplaceButton({
   listingId,
   listing,
   photoUrls,
+  onPosted,
 }: {
   listingId: string;
   listing: MarketplaceListing;
   photoUrls: string[];
+  // Fired when a post in flight is confirmed live, so the parent form can
+  // show the listing as Live (the server already flipped it from Draft).
+  onPosted?: () => void;
 }) {
   // null = still checking, true/false = known. The bridge content script
   // sets a data attribute (and fires an event) the instant it loads, so
@@ -53,10 +57,15 @@ export function PostToMarketplaceButton({
   const [error, setError] = useState<string | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const statusRef = useRef<ConnectionStatus>("idle");
+  const onPostedRef = useRef(onPosted);
 
   useEffect(() => {
     statusRef.current = connection.status;
   }, [connection.status]);
+
+  useEffect(() => {
+    onPostedRef.current = onPosted;
+  }, [onPosted]);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -67,6 +76,7 @@ export function PostToMarketplaceButton({
         (c: { platform: string }) => c.platform === "facebook",
       );
       if (facebook) {
+        if (statusRef.current === "pending" && facebook.status === "posted") onPostedRef.current?.();
         setConnection({ status: facebook.status, externalUrl: facebook.externalUrl });
       }
       return facebook ?? null;

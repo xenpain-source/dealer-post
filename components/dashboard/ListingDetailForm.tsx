@@ -377,7 +377,18 @@ className="dl-textarea"
 </div>
 
 {listing.status !== "sold" && (
-<PostToMarketplaceButton listingId={listing.id} listing={listing} photoUrls={photos} />
+<PostToMarketplaceButton
+listingId={listing.id}
+listing={listing}
+photoUrls={photos}
+onPosted={() => {
+// The server already moved it from Draft to Live — mirror that here so
+// the next autosave doesn't write the stale "draft" back over it.
+if (statusRef.current !== "draft") return;
+statusRef.current = "posted";
+setStatus("posted");
+}}
+/>
 )}
 
 {error && <div className="dl-alert dl-alert--danger">{error}</div>}

@@ -96,11 +96,31 @@
   // catches it without needing a fresh page load. This is a heuristic (the
   // exact URL shape isn't documented and can change), so it's paired with a
   // manual "I published it" button in the banner as a fallback.
-  function watchForPublish(onPublished, timeoutMs = 5 * 60 * 1000) {
+  //
+  // A listing that Facebook holds for review never lands on /item/ — it goes
+  // to the dealer's selling page or elsewhere instead. So also count it as
+  // published once the dealer has clicked Facebook's own Publish button and
+  // the page has then left /marketplace/create/ (externalUrl is unknown then).
+  function watchForPublish(onPublished, timeoutMs = 20 * 60 * 1000) {
     const start = Date.now();
+    let publishClicked = false;
+    document.addEventListener(
+      "click",
+      (event) => {
+        const button = event.target instanceof Element ? event.target.closest('button, [role="button"]') : null;
+        if (!button || button.closest("#dealerloft-banner")) return;
+        const label = normalize(button.getAttribute("aria-label") || button.textContent);
+        if (label === "publish" || label === "post") publishClicked = true;
+      },
+      true,
+    );
     const check = () => {
       if (/\/marketplace\/item\//.test(location.pathname)) {
         onPublished(location.href);
+        return;
+      }
+      if (publishClicked && !location.pathname.startsWith("/marketplace/create")) {
+        onPublished(null);
         return;
       }
       if (Date.now() - start > timeoutMs) return; // give up quietly
