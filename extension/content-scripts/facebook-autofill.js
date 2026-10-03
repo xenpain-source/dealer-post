@@ -435,18 +435,28 @@
   function showSummary(results, watchingForPublish) {
     const ok = results.filter((r) => r.ok).length;
     const banner = showBanner(`DealerLoft filled ${ok} of ${results.length} fields.`);
+    // Per-field results fold away to keep the banner short — but open on
+    // their own when something needs the dealer's attention.
+    const failed = results.length - ok;
+    const details = document.createElement("details");
+    details.open = failed > 0;
+    details.style.cssText = "margin-top:8px;font-weight:400;font-size:13px";
+    const summary = document.createElement("summary");
+    summary.textContent = failed > 0 ? `${failed} need${failed === 1 ? "s" : ""} attention — details` : "Details";
+    summary.style.cssText = "cursor:pointer;opacity:.85";
+    details.appendChild(summary);
     const list = document.createElement("div");
-    list.style.cssText = "margin-top:8px;font-weight:400;font-size:13px;opacity:.85";
-    list.innerHTML = results
-      .map((r) => `${r.ok ? "✓" : "⚠"} ${r.field}: ${r.note}`)
-      .join("<br>");
-    banner.appendChild(list);
+    list.style.cssText = "margin-top:6px;opacity:.85;white-space:pre-line";
+    // textContent, not innerHTML: notes can include listing values.
+    list.textContent = results.map((r) => `${r.ok ? "✓" : "⚠"} ${r.field}: ${r.note}`).join("\n");
+    details.appendChild(list);
+    banner.appendChild(details);
 
     const status = document.createElement("div");
     status.style.cssText = "margin-top:10px;font-weight:400;font-size:13px;opacity:.85";
     status.textContent = watchingForPublish
-      ? "Review everything above, then click Facebook's own Publish button — DealerLoft will notice on its own."
-      : "Review everything above, then click Facebook's own Publish button.";
+      ? "Review the listing, then click Facebook's own Publish button — DealerLoft will notice on its own."
+      : "Review the listing, then click Facebook's own Publish button.";
     banner.appendChild(status);
 
     const row = document.createElement("div");
