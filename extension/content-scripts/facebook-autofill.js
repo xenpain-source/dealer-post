@@ -74,58 +74,24 @@
     });
   }
 
-  // Tells DealerLoft the listing went live, so the dashboard can flip its
-  // "Posting…" pill to "Live on Facebook" without the dealer doing anything
-  // else. Best-effort: if this never fires (DealerLoft's token expires, the
-  // dealer closes the tab, whatever), the dealer can still see it went out
-  // on the Facebook side — DealerLoft just won't know automatically.
-  async function reportPosted(token, callbackUrl, externalUrl) {
-    if (!token || !callbackUrl) return false;
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage(
-        { type: "DEALERLOFT_REPORT_POSTED", token, callbackUrl, externalUrl },
-        (response) => resolve(Boolean(response?.ok)),
-      );
-    });
-  }
-
-  // After a successful publish, Facebook moves off /marketplace/create/vehicle
-  // to the new listing's own page (something like /marketplace/item/<id>).
-  // Since this is a single-page app, our already-injected content script
-  // keeps running through that navigation — so watching location.href here
-  // catches it without needing a fresh page load. This is a heuristic (the
-  // exact URL shape isn't documented and can change).
-  //
-  // A listing that Facebook holds for review never lands on /item/ — it goes
-  // to the dealer's selling page or elsewhere instead. So also count it as
-  // published once the dealer has clicked Facebook's own Publish button and
-  // the page has then left /marketplace/create/ (externalUrl is unknown then).
-  function watchForPublish(onPublished, timeoutMs = 20 * 60 * 1000) {
-    const start = Date.now();
-    let publishClicked = false;
+  // Tells the background worker when the dealer clicks Facebook's own
+  // Publish (or Post) button. The worker does the rest — it watches this
+  // tab's URL and reports the post once the tab moves on — because Facebook
+  // may do a full page load after publishing, which would take this script
+  // down with the page before it could report anything itself.
+  function watchForPublishClick() {
     document.addEventListener(
       "click",
       (event) => {
         const button = event.target instanceof Element ? event.target.closest('button, [role="button"]') : null;
         if (!button || button.closest("#dealerloft-banner")) return;
         const label = normalize(button.getAttribute("aria-label") || button.textContent);
-        if (label === "publish" || label === "post") publishClicked = true;
+        if (!/^(publish|post)\b/.test(label)) return;
+        log("Publish clicked:", label);
+        chrome.runtime.sendMessage({ type: "DEALERLOFT_PUBLISH_CLICKED" });
       },
       true,
     );
-    const check = () => {
-      if (/\/marketplace\/item\//.test(location.pathname)) {
-        onPublished(location.href);
-        return;
-      }
-      if (publishClicked && !location.pathname.startsWith("/marketplace/create")) {
-        onPublished(null);
-        return;
-      }
-      if (Date.now() - start > timeoutMs) return; // give up quietly
-      setTimeout(check, 1000);
-    };
-    check();
   }
 
   async function waitForForm(timeoutMs = 10000) {
@@ -512,22 +478,18 @@
 
     const status = showSummary(results);
 
-    // Report the publish exactly once — the token is single-use, so a second
-    // report would be rejected and look like a failure.
     if (token && callbackUrl) {
-      let reported = false;
-      watchForPublish(async (href) => {
-        if (reported) return;
-        reported = true;
-        const ok = await reportPosted(token, callbackUrl, href);
-        if (status) {
-          status.textContent = ok
-            ? "Looks like this went live — DealerLoft marked it as posted."
-            : "Looks like this went live, but DealerLoft couldn't be reached to record it.";
-        }
+      watchForPublishClick();
+      // The background worker reports the post and tells us how it went —
+      // only seen here if Facebook didn't replace the page in between.
+      chrome.runtime.onMessage.addListener((message) => {
+        if (message?.type !== "DEALERLOFT_POST_RECORDED") return;
+        status.textContent = message.ok
+          ? "Looks like this went live — DealerLoft marked it as posted."
+          : "Looks like this went live, but DealerLoft couldn't be reached to record it.";
         // Nothing left to do once it's recorded, so the banner gets out of the
         // way on its own. A failure stays up so the dealer actually sees it.
-        if (ok) setTimeout(() => document.getElementById("dealerloft-banner")?.remove(), 4000);
+        if (message.ok) setTimeout(() => document.getElementById("dealerloft-banner")?.remove(), 4000);
       });
     }
   }
