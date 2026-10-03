@@ -114,17 +114,29 @@ export function PostToMarketplaceButton({
     };
   }, []);
 
-  // The extension tells us when the dealer closes the Facebook tab without
-  // publishing, so the card can drop straight back to a clean retry.
+  // The extension tells us the moment the post goes through, or when the
+  // dealer closes the Facebook tab without publishing — so the card doesn't
+  // depend on polling, which Chrome throttles while this tab is in the
+  // background.
   useEffect(() => {
     function onMessage(event: MessageEvent) {
       if (event.source !== window || event.origin !== window.location.origin) return;
       const data = event.data;
-      if (data?.source !== "dealerloft-extension" || data.type !== "FACEBOOK_TAB_CLOSED") return;
-      if (statusRef.current === "pending") cancelPost();
+      if (data?.source !== "dealerloft-extension") return;
+      if (statusRef.current !== "pending") return;
+      if (data.type === "FACEBOOK_POSTED") void fetchStatus();
+      else if (data.type === "FACEBOOK_TAB_CLOSED") void cancelPost();
+    }
+    // Coming back to this tab after publishing: re-check straight away.
+    function onVisible() {
+      if (document.visibilityState === "visible" && statusRef.current === "pending") void fetchStatus();
     }
     window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -134,7 +146,10 @@ export function PostToMarketplaceButton({
     const tick = async () => {
       attempts += 1;
       const facebook = await fetchStatus();
-      if (facebook?.status !== "pending") return;
+      // Settled (posted, cancelled, expired) — stop. A failed request returns
+      // null; keep polling through it rather than freezing on a network blip.
+      if (facebook && facebook.status !== "pending") return;
+      if (statusRef.current !== "pending") return;
       if (attempts < POLL_MAX_ATTEMPTS) {
         pollTimer.current = setTimeout(tick, POLL_INTERVAL_MS);
       } else {

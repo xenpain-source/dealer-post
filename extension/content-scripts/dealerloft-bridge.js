@@ -39,13 +39,16 @@
     );
   });
 
-  // The background worker saw the dealer close the Facebook tab before
-  // publishing — pass that on so the page can stop waiting.
+  // The background worker saw the post go through, or the dealer close the
+  // Facebook tab before publishing — pass that on so the page can update
+  // straight away instead of waiting on its own polling.
+  const RELAYED = {
+    DEALERLOFT_FACEBOOK_POSTED: "FACEBOOK_POSTED",
+    DEALERLOFT_FACEBOOK_TAB_CLOSED: "FACEBOOK_TAB_CLOSED",
+  };
   chrome.runtime.onMessage.addListener((message) => {
-    if (message?.type !== "DEALERLOFT_FACEBOOK_TAB_CLOSED") return;
-    window.postMessage(
-      { source: "dealerloft-extension", type: "FACEBOOK_TAB_CLOSED" },
-      window.location.origin,
-    );
+    if (!Object.hasOwn(RELAYED, message?.type)) return;
+    const type = RELAYED[message.type];
+    window.postMessage({ source: "dealerloft-extension", type }, window.location.origin);
   });
 })();
