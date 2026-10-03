@@ -19,6 +19,7 @@ export type LotListing = {
   oneOwner: boolean;
   status: ListingStatus;
   createdAt: Date;
+  photoUrls: string[]; // in sortOrder; the first is the cover
   coverUrl: string | null;
   facebook: "posted" | "publishing" | null;
 };
@@ -50,8 +51,13 @@ export function displayStatus(listing: LotListing): DisplayStatus {
   return "draft";
 }
 
+// "2019 Honda Accord EX-L". Skips the make when the model was typed with it
+// already ("Ford F-150 Raptor"), so it never reads "Ford Ford F-150 Raptor".
 export function vehicleName(listing: Pick<LotListing, "year" | "make" | "model">): string {
-  return `${listing.year} ${listing.make} ${listing.model}`;
+  const make = listing.make.trim();
+  const model = listing.model.trim();
+  const repeatsMake = make && model.toLowerCase().startsWith(`${make.toLowerCase()} `);
+  return [listing.year, repeatsMake ? null : make, model].filter(Boolean).join(" ");
 }
 
 // $486k / $1.2M — for tight spots like the body-style bars.

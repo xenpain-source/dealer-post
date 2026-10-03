@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { DlLoader } from "./DlLoader";
 import { Toast } from "./Toast";
 import { PostToMarketplaceButton } from "./PostToMarketplaceButton";
+import { PhotoCarousel } from "./PhotoCarousel";
+import { PhotoUploader } from "./PhotoUploader";
 import { generateListingDescription, readVehicleFieldsFromForm } from "@/lib/description";
+import { vehicleName } from "@/lib/lot-stats";
 
 type Listing = {
 id: string;
@@ -69,6 +72,45 @@ const [generating, setGenerating] = useState(false);
 const [error, setError] = useState<string | null>(null);
 const [autosave, setAutosave] = useState<AutosaveState>("idle");
 const [toast, setToast] = useState<string | null>(null);
+const [photoUrls, setPhotoUrls] = useState<string[]>(photos);
+const [photoSave, setPhotoSave] = useState<AutosaveState>("idle");
+const photoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+const photoSaveSeq = useRef(0);
+
+// Photos save on their own, shortly after each change (reorder, remove,
+// upload), the same way the fields autosave. Only the latest change's
+// result is shown, so a slow earlier save can't overwrite the status.
+function handlePhotosChange(urls: string[]) {
+setPhotoUrls(urls);
+if (photoSaveTimer.current) clearTimeout(photoSaveTimer.current);
+photoSaveTimer.current = setTimeout(async () => {
+const seq = ++photoSaveSeq.current;
+setPhotoSave("saving");
+try {
+const res = await fetch(`/api/listings/${listing.id}/photos`, {
+method: "PUT",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ urls }),
+});
+if (seq === photoSaveSeq.current) setPhotoSave(res.ok ? "saved" : "error");
+} catch {
+if (seq === photoSaveSeq.current) setPhotoSave("error");
+}
+}, 600);
+}
+
+useEffect(() => {
+if (photoSave === "saved" || photoSave === "error") {
+const t = setTimeout(() => setPhotoSave("idle"), 2500);
+return () => clearTimeout(t);
+}
+}, [photoSave]);
+
+useEffect(() => {
+return () => {
+if (photoSaveTimer.current) clearTimeout(photoSaveTimer.current);
+};
+}, []);
 
 async function handleGenerateDescription() {
 const form = formRef.current;
@@ -189,6 +231,34 @@ const busy = saving || deleting;
 
 return (
 <>
+{/* Outside the <form> so photo changes don't trigger the fields' autosave. */}
+<div className="dl-card mt-6">
+<div className="flex items-baseline justify-between gap-3">
+<h2 className="dl-h4">Photos</h2>
+<span
+className="dl-small"
+aria-live="polite"
+style={{ color: photoSave === "error" ? "var(--danger-fg)" : undefined }}
+>
+{photoSave === "saving" && "Saving…"}
+{photoSave === "saved" && "Saved"}
+{photoSave === "error" && "Couldn't save the photo order. Try again."}
+</span>
+</div>
+{photoUrls.length > 0 && (
+<div className="mt-3">
+<PhotoCarousel
+photos={photoUrls}
+label={vehicleName(listing)}
+frameStyle={{ borderRadius: "var(--dl-radius-md)", border: "1px solid var(--border)" }}
+/>
+</div>
+)}
+<div className="mt-4">
+<PhotoUploader initialUrls={photos} onUploaded={handlePhotosChange} />
+</div>
+</div>
+
 <form
 ref={formRef}
 onSubmit={handleSubmit}
@@ -380,7 +450,7 @@ className="dl-textarea"
 <PostToMarketplaceButton
 listingId={listing.id}
 listing={listing}
-photoUrls={photos}
+photoUrls={photoUrls}
 onPosted={() => {
 // The server already moved it from Draft to Live — mirror that here so
 // the next autosave doesn't write the stale "draft" back over it.

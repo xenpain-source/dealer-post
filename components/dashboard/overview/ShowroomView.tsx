@@ -9,7 +9,8 @@ import {
   type LotListing,
   type LotStats,
 } from "@/lib/lot-stats";
-import { CoverPhoto, StatCard, StatusPill } from "./parts";
+import { PhotoCarousel } from "@/components/dashboard/PhotoCarousel";
+import { ListingCardShell, StatCard, StatusPill } from "./parts";
 
 const MAX_CARDS = 8;
 
@@ -45,13 +46,11 @@ function ListingCard({ listing, now }: { listing: LotListing; now: Date }) {
     .filter(Boolean)
     .join(" · ");
 
+  const name = vehicleName(listing);
+
   return (
-    <Link
-      href={`/dashboard/listings/${listing.id}`}
-      className="dl-listing"
-      style={{ textDecoration: "none", color: "inherit" }}
-    >
-      <CoverPhoto url={listing.coverUrl}>
+    <ListingCardShell href={`/dashboard/listings/${listing.id}`} label={name}>
+      <PhotoCarousel photos={listing.photoUrls} label={name}>
         <StatusPill status={displayStatus(listing)} />
         {!sold && (
           <span
@@ -71,9 +70,9 @@ function ListingCard({ listing, now }: { listing: LotListing; now: Date }) {
             {days} d
           </span>
         )}
-      </CoverPhoto>
+      </PhotoCarousel>
       <div className="body">
-        <div className="title">{vehicleName(listing)}</div>
+        <div className="title">{name}</div>
         <div className="price">{formatCurrency(listing.price)}</div>
         <div className="specs">{specs}</div>
         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -84,7 +83,7 @@ function ListingCard({ listing, now }: { listing: LotListing; now: Date }) {
           {!sold && days >= AGE_WATCH_DAYS && <Flag warn>{days} days on the lot</Flag>}
         </div>
       </div>
-    </Link>
+    </ListingCardShell>
   );
 }
 

@@ -43,6 +43,34 @@ body {
   scrollbar-color: #d5d9e0 transparent;
 }
 
+/* PhotoCarousel arrows (components/dashboard/PhotoCarousel.tsx). Always
+   visible, so they're findable on touch screens too. */
+.dl-carousel__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0e0f12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(14, 15, 18, 0.25);
+  transition: background-color 0.15s;
+}
+.dl-carousel__arrow:hover {
+  background: #ffffff;
+}
+.dl-carousel__arrow:focus-visible {
+  outline: 2px solid #2e4bff;
+  outline-offset: 2px;
+}
+
 /* Collapse the dl-sidebar into a horizontal top bar below the sm breakpoint. */
 @media (max-width: 639px) {
   .dl-sidebar {

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import type { DisplayStatus } from "@/lib/lot-stats";
 
 const PILL: Record<DisplayStatus, { className: string; label: string }> = {
@@ -46,21 +47,24 @@ export function StatCard({
   );
 }
 
-// Cover photo, or the kit's neutral gradient (from .dl-listing .media) when
-// a listing has none yet.
-export function CoverPhoto({ url, children }: { url: string | null; children?: ReactNode }) {
+// A listing card that opens the listing when clicked anywhere, while still
+// letting the photo carousel's arrows work. The link is stretched over the
+// whole card as a sibling (z-index 1) rather than wrapping it, because the
+// arrows are buttons and buttons can't live inside a link; the arrows sit
+// above it at z-index 2.
+export function ListingCardShell({
+  href,
+  label,
+  children,
+}: {
+  href: string;
+  label: string;
+  children: ReactNode;
+}) {
   return (
-    <div className="media">
-      {url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={url}
-          alt=""
-          loading="lazy"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-        />
-      )}
+    <div className="dl-listing" style={{ position: "relative" }}>
       {children}
+      <Link href={href} aria-label={label} style={{ position: "absolute", inset: 0, zIndex: 1 }} />
     </div>
   );
 }

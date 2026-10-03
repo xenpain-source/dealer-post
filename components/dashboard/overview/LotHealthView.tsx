@@ -8,7 +8,8 @@ import {
   type LotListing,
   type LotStats,
 } from "@/lib/lot-stats";
-import { CoverPhoto, StatCard, StatusPill } from "./parts";
+import { PhotoCarousel } from "@/components/dashboard/PhotoCarousel";
+import { ListingCardShell, StatCard, StatusPill } from "./parts";
 
 const MAX_ATTENTION = 6;
 const NEWEST_COUNT = 4;
@@ -158,26 +159,24 @@ function NeedsAttention({ items }: { items: AttentionItem[] }) {
 function NewestStrip({ listings }: { listings: LotListing[] }) {
   return (
     <div className="mt-4 grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}>
-      {listings.map((listing) => (
-        <Link
-          key={listing.id}
-          href={`/dashboard/listings/${listing.id}`}
-          className="dl-listing"
-          style={{ textDecoration: "none", color: "inherit" }}
-        >
-          <CoverPhoto url={listing.coverUrl}>
-            <StatusPill status={displayStatus(listing)} />
-          </CoverPhoto>
-          <div className="body" style={{ padding: "10px 12px 12px" }}>
-            <div className="truncate" style={{ fontSize: 13, fontWeight: 600 }}>
-              {vehicleName(listing)}
+      {listings.map((listing) => {
+        const name = vehicleName(listing);
+        return (
+          <ListingCardShell key={listing.id} href={`/dashboard/listings/${listing.id}`} label={name}>
+            <PhotoCarousel photos={listing.photoUrls} label={name}>
+              <StatusPill status={displayStatus(listing)} />
+            </PhotoCarousel>
+            <div className="body" style={{ padding: "10px 12px 12px" }}>
+              <div className="truncate" style={{ fontSize: 13, fontWeight: 600 }}>
+                {name}
+              </div>
+              <div className="dl-data" style={{ fontSize: 15, fontWeight: 500 }}>
+                {formatCurrency(listing.price)}
+              </div>
             </div>
-            <div className="dl-data" style={{ fontSize: 15, fontWeight: 500 }}>
-              {formatCurrency(listing.price)}
-            </div>
-          </div>
-        </Link>
-      ))}
+          </ListingCardShell>
+        );
+      })}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ListingRowActions } from "./ListingRowActions";
+import { vehicleName } from "@/lib/lot-stats";
 
 type ListingStatus = "draft" | "posted" | "sold";
 
@@ -144,7 +145,7 @@ export function ListingsTable({
                       ) : (
                         <div className="thumb" />
                       )}
-                      {listing.year} {listing.make} {listing.model}
+                      {vehicleName(listing)}
                     </Link>
                   </td>
                   <td className="num">${listing.price.toLocaleString()}</td>

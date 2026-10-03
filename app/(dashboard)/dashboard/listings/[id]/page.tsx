@@ -5,6 +5,7 @@ import { db } from "@/lib/db/client";
 import { listings, listingPhotos } from "@/lib/db/schema";
 import { getCurrentDealer } from "@/lib/db/dealer";
 import { ListingDetailForm } from "@/components/dashboard/ListingDetailForm";
+import { vehicleName } from "@/lib/lot-stats";
 
 export const metadata: Metadata = {
 title: "Edit listing",
@@ -35,35 +36,12 @@ const photos = await db
 
 return (
 <div className="max-w-2xl">
-<h1 className="dl-h1">
-{listing.year} {listing.make} {listing.model}
-</h1>
+<h1 className="dl-h1">{vehicleName(listing)}</h1>
 <p className="dl-small mt-1">
-Edit the details, update its status, or remove it.
+Edit the details and photos, update its status, or remove it.
 </p>
 
-{photos.length > 0 && (
-<div className="mt-6 grid grid-cols-4 gap-2 sm:grid-cols-6">
-{photos.map((photo) => (
-<div
-key={photo.id}
-className="aspect-square overflow-hidden"
-style={{
-borderRadius: "var(--dl-radius-md)",
-border: "1px solid var(--border)",
-}}
->
-{/* eslint-disable-next-line @next/next/no-img-element */}
-<img
-src={photo.url}
-alt=""
-className="h-full w-full object-cover"
-/>
-</div>
-))}
-</div>
-)}
-
+{/* Photos (viewer + reorder/upload) live in the form's first card. */}
 <ListingDetailForm listing={listing} photos={photos.map((photo) => photo.url)} />
 </div>
 );
