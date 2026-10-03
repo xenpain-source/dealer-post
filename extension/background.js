@@ -10,6 +10,18 @@
 const PENDING_KEY = "dealerloft_pending_listing";
 const PENDING_TTL_MS = 5 * 60 * 1000; // 5 minutes — stale data is dropped, not filled in
 
+// Message payloads have to be JSON-serializable, so photo bytes travel to
+// the content script as base64. Chunked so String.fromCharCode doesn't blow
+// the argument limit on multi-megabyte photos.
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "DEALERLOFT_POST_TO_MARKETPLACE") {
     const payload = {
@@ -57,6 +69,27 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       body: JSON.stringify({ token, externalUrl: externalUrl ?? null }),
     })
       .then((res) => sendResponse({ ok: res.ok }))
+      .catch((err) => sendResponse({ ok: false, error: String(err) }));
+    return true;
+  }
+
+  // The Facebook-side content script can't fetch dealer photos itself: its
+  // requests carry facebook.com's origin, and the photo host (R2) sends no
+  // CORS headers allowing that. The service worker's own fetch isn't
+  // CORS-restricted for hosts listed in host_permissions, so it downloads
+  // the photo here and hands the bytes back.
+  if (message?.type === "DEALERLOFT_FETCH_PHOTO") {
+    const { url } = message;
+    if (typeof url !== "string" || !/^https?:\/\//.test(url)) {
+      sendResponse({ ok: false, error: "invalid photo url" });
+      return;
+    }
+    fetch(url)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`fetch failed (${res.status})`);
+        const type = res.headers.get("content-type") || "image/jpeg";
+        sendResponse({ ok: true, type, base64: arrayBufferToBase64(await res.arrayBuffer()) });
+      })
       .catch((err) => sendResponse({ ok: false, error: String(err) }));
     return true;
   }

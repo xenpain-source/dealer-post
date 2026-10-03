@@ -9,7 +9,8 @@
     "https://dealerloft.com/*",
     "https://*.dealerloft.com/*",
     "https://dealer-post-igy0aifr4-xen21.vercel.app/*",
-    "http://localhost:3000/*"
+    "http://localhost:3000/*",
+    "https://*.r2.dev/*"
   ],
   "background": {
     "service_worker": "background.js"
