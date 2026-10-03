@@ -24,7 +24,7 @@ status: "draft" | "posted" | "sold";
 
 const STATUSES: { value: Listing["status"]; label: string }[] = [
 { value: "draft", label: "Draft" },
-{ value: "posted", label: "Posted" },
+{ value: "posted", label: "Live" },
 { value: "sold", label: "Sold" },
 ];
 
@@ -173,7 +173,7 @@ className="mt-6 flex flex-col gap-6"
 <div className="dl-card">
 <h2 className="dl-h4">Status</h2>
 <p className="dl-small mt-1">
-Draft is only visible to you. Mark it Posted once it&apos;s live
+Draft is only visible to you. Mark it Live once it&apos;s posted
 somewhere, or Sold once it&apos;s gone.
 </p>
 <div className="mt-3 flex flex-wrap gap-2">
