@@ -528,6 +528,9 @@
             ? "Looks like this went live — DealerLoft marked it as posted."
             : "Looks like this went live, but DealerLoft couldn't be reached to record it.";
         }
+        // Nothing left to do once it's recorded, so the banner gets out of the
+        // way on its own. A failure stays up so the dealer actually sees it.
+        if (ok) setTimeout(() => document.getElementById("dealerloft-banner")?.remove(), 4000);
       });
     }
   }
