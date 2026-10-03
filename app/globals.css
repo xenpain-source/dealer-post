@@ -143,6 +143,116 @@ body {
   100% { transform: scale(0.97); opacity: 0.15; }
 }
 
+/* Landing-page dashboard showcase (components/marketing/LotHealthShowcase.tsx).
+   Copy 1 : mock 1.618, the golden split with the wider side on the visual. */
+.dl-showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.618fr);
+  gap: var(--dl-space-12);
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .dl-showcase { grid-template-columns: 1fr; }
+}
+.dl-showcase__app {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--dl-radius-lg);
+  padding: 20px;
+  min-width: 0;
+}
+.dl-showcase__toggle {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.dl-showcase__toggle button {
+  font: 600 var(--dl-text-sm) / 1 var(--dl-font-body);
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.dl-showcase__toggle button[aria-selected="true"] {
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 0 0 1px var(--border);
+}
+.dl-showcase__toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Both views share one grid cell, so the stage is as tall as the taller. */
+.dl-showcase__stage { display: grid; margin-top: 16px; }
+.dl-showcase__cards,
+.dl-showcase__health { grid-area: 1 / 1; min-width: 0; }
+.dl-showcase__cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+@media (max-width: 640px) {
+  .dl-showcase__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.dl-showcase__card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.6s var(--dl-ease), opacity 0.45s var(--dl-ease);
+}
+.dl-showcase__photo { position: relative; aspect-ratio: 4 / 3; background: var(--border); }
+.dl-showcase__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.dl-showcase__photo .dl-pill { position: absolute; top: 8px; left: 8px; }
+.dl-showcase__body { display: grid; gap: 2px; padding: 10px 12px 12px; }
+.dl-showcase__body b { font: 600 13px/1.3 var(--dl-font-display); }
+.dl-showcase__body span { font-size: 16px; font-weight: 500; }
+.dl-showcase__body small { font-size: 12px; color: var(--text-muted); }
+.dl-showcase__health {
+  opacity: 0;
+  transition: opacity 0.2s var(--dl-ease);
+}
+.dl-showcase__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.dl-showcase__stats div { background: var(--surface-2); border-radius: 10px; padding: 14px; display: grid; gap: 8px; }
+.dl-showcase__stats span {
+  font: 500 var(--dl-text-xs) / 1 var(--dl-font-mono);
+  letter-spacing: var(--dl-tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.dl-showcase__stats b { font-size: clamp(1.125rem, 2vw, 1.625rem); font-weight: 500; line-height: 1; }
+.dl-showcase__bar { display: flex; gap: 3px; height: 14px; margin-top: 22px; border-radius: 7px; overflow: hidden; }
+.dl-showcase__bar i {
+  display: block;
+  height: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s var(--dl-ease);
+}
+.dl-showcase__legend { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 10px; font-size: 12px; color: var(--text-muted); }
+.dl-showcase__legend b { display: block; font-size: 16px; font-weight: 500; color: var(--text); }
+.dl-showcase__todo { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.dl-showcase__pill-warn { background: var(--warning-bg); color: var(--warning-fg); }
+.dl-showcase__pill-warn::before { background: var(--warning-dot); }
+/* Lot health view: cards drop away, stats and bar come in. */
+.dl-showcase__app.is-health .dl-showcase__card { transform: translateY(40px) scale(0.85); opacity: 0; }
+.dl-showcase__app.is-health .dl-showcase__card:nth-child(2) { transition-delay: 0.05s; }
+.dl-showcase__app.is-health .dl-showcase__card:nth-child(3) { transition-delay: 0.1s; }
+.dl-showcase__app.is-health .dl-showcase__card:nth-child(4) { transition-delay: 0.15s; }
+/* Delays only on the way in, so flipping back to Showroom is immediate. */
+.dl-showcase__app.is-health .dl-showcase__health { opacity: 1; transition: opacity 0.35s var(--dl-ease) 0.3s; }
+.dl-showcase__app.is-health .dl-showcase__bar i { transform: scaleX(1); transition: transform 0.5s var(--dl-ease) 0.45s; }
+@media (prefers-reduced-motion: reduce) {
+  .dl-showcase__card,
+  .dl-showcase__health,
+  .dl-showcase__bar i { transition: none !important; }
+}
+
 /* Collapse the dl-sidebar into a horizontal top bar below the sm breakpoint. */
 @media (max-width: 639px) {
   .dl-sidebar {

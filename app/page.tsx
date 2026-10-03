@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
+import { LotHealthShowcase } from "@/components/marketing/LotHealthShowcase";
 
 // Sample vehicle photo for the hero mock listing card.
 const HERO_LISTING_PHOTO =
@@ -157,6 +158,9 @@ export default function Home() {
             </ul>
           </div>
         </section>
+
+        {/* Dashboard showcase: Showroom flips to Lot health */}
+        <LotHealthShowcase accordPhoto={HERO_LISTING_PHOTO} />
 
         {/* Pricing */}
         <section id="pricing" className="dl-container dl-section">
