@@ -94,8 +94,7 @@
   // Since this is a single-page app, our already-injected content script
   // keeps running through that navigation — so watching location.href here
   // catches it without needing a fresh page load. This is a heuristic (the
-  // exact URL shape isn't documented and can change), so it's paired with a
-  // manual "I published it" button in the banner as a fallback.
+  // exact URL shape isn't documented and can change).
   //
   // A listing that Facebook holds for review never lands on /item/ — it goes
   // to the dealer's selling page or elsewhere instead. So also count it as
@@ -433,7 +432,7 @@
     return banner;
   }
 
-  function showSummary(results, onConfirmPublished) {
+  function showSummary(results, watchingForPublish) {
     const ok = results.filter((r) => r.ok).length;
     const banner = showBanner(`DealerLoft filled ${ok} of ${results.length} fields.`);
     const list = document.createElement("div");
@@ -445,28 +444,13 @@
 
     const status = document.createElement("div");
     status.style.cssText = "margin-top:10px;font-weight:400;font-size:13px;opacity:.85";
-    status.textContent = "Review everything above, then click Facebook's own Publish button.";
+    status.textContent = watchingForPublish
+      ? "Review everything above, then click Facebook's own Publish button — DealerLoft will notice on its own."
+      : "Review everything above, then click Facebook's own Publish button.";
     banner.appendChild(status);
 
     const row = document.createElement("div");
     row.style.cssText = "margin-top:10px;display:flex;gap:8px;flex-wrap:wrap";
-
-    if (onConfirmPublished) {
-      const confirm = document.createElement("button");
-      confirm.textContent = "I clicked Publish";
-      confirm.style.cssText =
-        "background:#F4F5F7;border:none;color:#0E0F12;border-radius:6px;padding:4px 10px;cursor:pointer;font:600 13px inherit";
-      confirm.onclick = async () => {
-        confirm.disabled = true;
-        confirm.textContent = "Letting DealerLoft know…";
-        const ok = await onConfirmPublished(location.href);
-        status.textContent = ok
-          ? "DealerLoft marked this as posted."
-          : "Couldn't reach DealerLoft — it's still posted on Facebook, DealerLoft just won't show it automatically.";
-        confirm.remove();
-      };
-      row.appendChild(confirm);
-    }
 
     const dismiss = document.createElement("button");
     dismiss.textContent = "Dismiss";
@@ -518,20 +502,13 @@
     results.push(await fillField("Description", KEYWORDS.description, buildDescription(listing)));
     if (listing.photoUrls?.length) results.push(await tryAttachPhotos(listing.photoUrls));
 
-    let reported = false;
-    const confirmPublished = token && callbackUrl
-      ? async (externalUrl) => {
-          reported = true;
-          return reportPosted(token, callbackUrl, externalUrl);
-        }
-      : null;
+    const canReport = Boolean(token && callbackUrl);
+    const status = showSummary(results, canReport);
 
-    const status = showSummary(results, confirmPublished);
-
-    // Best-effort auto-detect in parallel with the manual "I clicked
-    // Publish" button above — whichever happens first wins, and if the
-    // dealer already confirmed manually we don't double-report.
-    if (token && callbackUrl) {
+    // Report the publish exactly once — the token is single-use, so a second
+    // report would be rejected and look like a failure.
+    if (canReport) {
+      let reported = false;
       watchForPublish(async (href) => {
         if (reported) return;
         reported = true;
