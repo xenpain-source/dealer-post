@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { SignIn } from "@clerk/nextjs";
 import { BrandLogoSmall } from "@/components/BrandLogo";
+import { AttractPanel } from "@/components/brand/AttractPanel";
 
 export const metadata: Metadata = {
   title: "Log in — DealerLoft",
@@ -13,29 +14,7 @@ export default function LoginPage() {
       className="flex-1 grid"
       style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,1.618fr)" }}
     >
-      {/* Brand panel */}
-      <div
-        className="dl-dark relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-12"
-        style={{ background: "var(--bg)" }}
-      >
-        <div className="absolute inset-0" style={{ zIndex: 0 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/dealerloft-hero-field.svg"
-            alt=""
-            className="h-full w-full object-cover"
-            style={{ objectPosition: "left center" }}
-          />
-        </div>
-        <Link href="/" aria-label="DealerLoft home" className="relative">
-          <BrandLogoSmall tone="white" className="h-6 w-auto" />
-        </Link>
-        <h2 className="dl-display relative">
-          Listings that
-          <br />
-          <em>attract.</em>
-        </h2>
-      </div>
+      <AttractPanel />
 
       {/* Form */}
       <div className="dl-light flex items-center justify-center px-6 py-16">
