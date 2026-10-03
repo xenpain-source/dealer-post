@@ -93,8 +93,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       body: JSON.stringify({ token, externalUrl: externalUrl ?? null }),
     })
       .then((res) => {
-        // Posted — closing the Facebook tab from now on is not an abandon.
-        if (res.ok) chrome.storage.local.remove(TRACKED_KEY);
+        if (res.ok) {
+          // Posted — tell the DealerLoft tab right away rather than leaving it
+          // to its polling (which Chrome throttles while that tab is in the
+          // background), and stop tracking: closing the Facebook tab from now
+          // on is not an abandon.
+          chrome.storage.local.get(TRACKED_KEY, (result) => {
+            const tracked = result[TRACKED_KEY];
+            chrome.storage.local.remove(TRACKED_KEY);
+            if (!tracked) return;
+            chrome.tabs.sendMessage(tracked.dealerloftTabId, { type: "DEALERLOFT_FACEBOOK_POSTED" }, () => {
+              void chrome.runtime.lastError; // DealerLoft tab already gone — nothing to tell
+            });
+          });
+        }
         sendResponse({ ok: res.ok });
       })
       .catch((err) => sendResponse({ ok: false, error: String(err) }));
