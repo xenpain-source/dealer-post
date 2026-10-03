@@ -99,7 +99,7 @@ export default async function DashboardOverview() {
                 }`}
               >
                 {listing.status === "posted"
-                  ? "Posted"
+                  ? "Live"
                   : listing.status === "sold"
                     ? "Sold"
                     : "Draft"}
