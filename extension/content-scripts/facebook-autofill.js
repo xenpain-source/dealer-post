@@ -30,6 +30,31 @@
     return (text || "").replace(/\s+/g, " ").trim().toLowerCase();
   }
 
+  function escapeRegExp(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  // Anything a value can actually go into. Facebook renders some of these
+  // fields (Description for sure, apparently Year/Price too) as
+  // contenteditable divs rather than real <input>/<textarea> elements — the
+  // same rich-text-editor pattern Facebook uses elsewhere on the site — so
+  // that has to count as a fillable control too, not just input/textarea.
+  const CONTROL_SELECTOR = 'input, textarea, [role="combobox"], [contenteditable="true"]';
+
+  // Strict: the label text IS (near enough) just the keyword — "Price",
+  // "Price:", "Price (USD)". Loose: the keyword shows up as a whole word
+  // inside a longer label — "Vehicle mileage", "Odometer reading" — and is
+  // only tried if nothing on the page matched strictly, so a loose match
+  // for one field can never steal a control a different field's strict
+  // match wanted.
+  function labelMatchesKeyword(text, keywords, { loose } = {}) {
+    return keywords.some((k) => {
+      if (text === k || text === `${k}:` || text.startsWith(`${k} `)) return true;
+      if (!loose) return false;
+      return new RegExp(`\\b${escapeRegExp(k)}\\b`).test(text);
+    });
+  }
+
   function log(...args) {
     console.log("[DealerLoft]", ...args);
   }
@@ -84,7 +109,7 @@
   async function waitForForm(timeoutMs = 10000) {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
-      const count = document.querySelectorAll('input, textarea, [role="combobox"]').length;
+      const count = document.querySelectorAll(CONTROL_SELECTOR).length;
       if (count > 3) return true;
       await wait(250);
     }
@@ -96,19 +121,23 @@
   // that lives in the same field "block" as that label — this is how
   // Facebook (and most React design systems) group a label with its control.
   function findFieldContainer(keywords) {
-    const candidates = document.querySelectorAll("label, span, div");
-    for (const el of candidates) {
-      if (el.childElementCount > 2) continue; // skip big wrapper elements
+    const candidates = Array.from(document.querySelectorAll("label, span, div, p")).filter((el) => {
+      if (el.childElementCount > 2) return false; // skip big wrapper elements
       const text = normalize(el.textContent);
-      if (!text || text.length > 40) continue;
-      const isMatch = keywords.some((k) => text === k || text.startsWith(`${k} `) || text === `${k}:`);
-      if (!isMatch) continue;
+      return Boolean(text) && text.length <= 40;
+    });
 
-      let container = el;
-      for (let i = 0; i < 5 && container; i++) {
-        const control = container.querySelector('input, textarea, [role="combobox"]');
-        if (control) return control;
-        container = container.parentElement;
+    for (const loose of [false, true]) {
+      for (const el of candidates) {
+        const text = normalize(el.textContent);
+        if (!labelMatchesKeyword(text, keywords, { loose })) continue;
+
+        let container = el;
+        for (let i = 0; i < 5 && container; i++) {
+          const control = container.querySelector(CONTROL_SELECTOR);
+          if (control) return control;
+          container = container.parentElement;
+        }
       }
     }
     return null;
@@ -123,15 +152,53 @@
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
+  // React-based rich text editors (this is apparently what Facebook's
+  // Description field is, and maybe Year/Price too) don't pick up a plain
+  // `el.textContent = value` assignment — their internal state just
+  // overwrites it back out on the next render. execCommand("insertText") is
+  // deprecated but still the most reliable way to make them see a real
+  // edit, the same as if the dealer had typed or pasted it in by hand.
+  function setContentEditableValue(el, value) {
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    const inserted = document.execCommand && document.execCommand("insertText", false, value);
+    if (!inserted) {
+      el.textContent = value;
+      el.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: value }));
+    }
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  // `control` is whatever findFieldContainer matched — an input/textarea, a
+  // role="combobox" wrapper, or a contenteditable div. Resolves it down to
+  // the actual thing text can go into and fills it, or returns null if
+  // there's genuinely nothing typable inside.
+  function setControlValue(control, value) {
+    if (control.matches('[contenteditable="true"]')) {
+      setContentEditableValue(control, value);
+      return control;
+    }
+    const input = control.matches("input, textarea")
+      ? control
+      : control.querySelector('input, textarea, [contenteditable="true"]');
+    if (!input) return null;
+    if (input.matches('[contenteditable="true"]')) setContentEditableValue(input, value);
+    else setNativeValue(input, value);
+    return input;
+  }
+
   async function tryFillText(fieldName, keywords, value) {
     if (value === null || value === undefined || value === "") {
       return { field: fieldName, ok: false, note: "no value to fill" };
     }
     const control = findFieldContainer(keywords);
     if (!control) return { field: fieldName, ok: false, note: "field not found on page" };
-    const input = control.matches("input, textarea") ? control : control.querySelector("input, textarea");
-    if (!input) return { field: fieldName, ok: false, note: "found label but no input inside it" };
-    setNativeValue(input, String(value));
+    const filled = setControlValue(control, String(value));
+    if (!filled) return { field: fieldName, ok: false, note: "found label but no editable field inside it" };
     return { field: fieldName, ok: true, note: "filled" };
   }
 
@@ -146,13 +213,26 @@
     control.click();
     await wait(150);
     const input = control.matches("input") ? control : control.querySelector("input");
-    if (input) setNativeValue(input, String(value));
-    await wait(450);
-
     const target = normalize(String(value));
-    const option = Array.from(document.querySelectorAll('[role="option"]')).find((o) =>
-      normalize(o.textContent).includes(target),
-    );
+    if (input) {
+      setNativeValue(input, String(value));
+      // Facebook's suggestion list is keystroke-driven, not just
+      // value-driven — a plain "input" event doesn't always trigger it.
+      // Nudge it with a trailing keyup so a listener that only watches
+      // keyboard events still fires. Harmless if it didn't need this.
+      input.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: String(value).slice(-1) || "a" }));
+    }
+
+    // Poll instead of one fixed 450ms wait — the suggestion list can take
+    // longer than that to show up, especially right after the page loads.
+    let option = null;
+    const deadline = Date.now() + 1500;
+    while (Date.now() < deadline && !option) {
+      option = Array.from(document.querySelectorAll('[role="option"]')).find((o) =>
+        normalize(o.textContent).includes(target),
+      );
+      if (!option) await wait(150);
+    }
     if (option) {
       option.click();
       await wait(150);
@@ -164,14 +244,60 @@
     return { field: fieldName, ok: false, note: "couldn't type into this field" };
   }
 
+  // listing.price/mileage normally arrive as numbers straight from the
+  // DealerLoft DB, but tolerate a string too ("$14,500", "52,000") in case
+  // a caller passes through raw form input.
+  function toNumber(value) {
+    if (typeof value === "number") return value;
+    const cleaned = String(value ?? "").replace(/[^0-9.]/g, "");
+    return cleaned ? Number(cleaned) : 0;
+  }
+
+  // DealerLoft's own content rules (claude/dealerloft-web-ui.md): price with
+  // no cents, mileage with a "mi" suffix, VIN uppercase.
+  function formatCurrency(value) {
+    return `$${Math.round(toNumber(value)).toLocaleString("en-US")}`;
+  }
+
+  function formatMileage(value) {
+    return `${Math.round(toNumber(value)).toLocaleString("en-US")} mi`;
+  }
+
+  function capitalize(text) {
+    return text.length ? text[0].toUpperCase() + text.slice(1) : text;
+  }
+
+  // DealerLoft's own "Generate description" button (AI or template) writes
+  // a COMPLETE description — price and mileage already formatted exactly
+  // the way formatCurrency()/formatMileage() produce them — straight into
+  // listing.description before the dealer ever gets here. Detect that and
+  // use it as-is, instead of wrapping another copy of the same
+  // headline/facts/closing around it. A short free-text note typed by hand
+  // (no formatted price/mileage in it) still gets enriched with the
+  // auto-generated facts below, same as before this feature existed.
   function buildDescription(listing) {
-    const extras = [];
-    if (listing.cleanTitle) extras.push("Clean title.");
-    if (listing.oneOwner) extras.push("One owner.");
-    if (listing.stockNumber) extras.push(`Stock #: ${listing.stockNumber}`);
-    if (listing.vin) extras.push(`VIN: ${listing.vin}`);
-    const base = (listing.description || "").trim();
-    return [base, ...extras].filter(Boolean).join("\n");
+    const existing = (listing.description || "").trim();
+    const alreadyComposed =
+      existing && existing.includes(formatCurrency(listing.price)) && existing.includes(formatMileage(listing.mileage));
+    if (alreadyComposed) return existing;
+
+    const title = [listing.year, listing.make, listing.model].filter(Boolean).join(" ");
+    const headline = title ? `${title} — ${formatCurrency(listing.price)}` : formatCurrency(listing.price);
+
+    const facts = [formatMileage(listing.mileage)];
+    if (listing.bodyType) facts.push(listing.bodyType);
+    if (listing.cleanTitle) facts.push("clean title");
+    if (listing.oneOwner) facts.push("one owner");
+    const factsLine = `${capitalize(facts.join(", "))}.`;
+
+    const idParts = [];
+    if (listing.stockNumber) idParts.push(`Stock #${listing.stockNumber}`);
+    if (listing.vin) idParts.push(`VIN ${String(listing.vin).toUpperCase()}`);
+    const idLine = idParts.join(" · ");
+
+    const closing = "Message us to schedule a test drive or ask any questions — this one won't last long.";
+
+    return [headline, existing, factsLine, closing, idLine].filter(Boolean).join("\n\n");
   }
 
   async function tryAttachPhotos(urls) {

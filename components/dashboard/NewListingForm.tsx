@@ -1,16 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { platforms } from "@/lib/platforms";
 import { PhotoUploader } from "@/components/dashboard/PhotoUploader";
 import { DlLoader } from "@/components/dashboard/DlLoader";
+import { generateListingDescription, readVehicleFieldsFromForm } from "@/lib/description";
 
 export function NewListingForm() {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+
+  async function handleGenerateDescription() {
+    const form = formRef.current;
+    if (!form) return;
+    setGenerating(true);
+    const fields = readVehicleFieldsFromForm(form);
+    try {
+      const res = await fetch("/api/listings/generate-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+      const data = res.ok ? await res.json() : null;
+      const description = data?.description ?? generateListingDescription(fields);
+      if (descriptionRef.current) descriptionRef.current.value = description;
+    } catch {
+      // Couldn't even reach our own API (offline, etc.) — the deterministic
+      // generator needs no network, so the button still does something.
+      if (descriptionRef.current) descriptionRef.current.value = generateListingDescription(fields);
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -54,7 +81,7 @@ export function NewListingForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="mt-8 flex flex-col gap-6">
       <div className="dl-card">
         <PhotoUploader onUploaded={setPhotoUrls} />
       </div>
@@ -172,10 +199,23 @@ export function NewListingForm() {
       </div>
 
       <div className="dl-card dl-field">
-        <label htmlFor="description" className="dl-label">
-          Description
-        </label>
+        <div className="flex items-center justify-between gap-3">
+          <label htmlFor="description" className="dl-label">
+            Description
+          </label>
+          <button
+            type="button"
+            onClick={handleGenerateDescription}
+            disabled={generating}
+            className="dl-btn dl-btn--ghost"
+            style={{ padding: "4px 10px", fontSize: 13 }}
+          >
+            {generating && <DlLoader />}
+            {generating ? "Generating…" : "Generate description"}
+          </button>
+        </div>
         <textarea
+          ref={descriptionRef}
           id="description"
           name="description"
           rows={4}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { DlLoader } from "./DlLoader";
 import { Toast } from "./Toast";
 import { PostToMarketplaceButton } from "./PostToMarketplaceButton";
+import { generateListingDescription, readVehicleFieldsFromForm } from "@/lib/description";
 
 type Listing = {
 id: string;
@@ -57,15 +58,39 @@ photos?: string[];
 }) {
 const router = useRouter();
 const formRef = useRef<HTMLFormElement>(null);
+const descriptionRef = useRef<HTMLTextAreaElement>(null);
 const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 const statusRef = useRef(listing.status);
 
 const [status, setStatus] = useState<Listing["status"]>(listing.status);
 const [saving, startSaving] = useTransition();
 const [deleting, startDeleting] = useTransition();
+const [generating, setGenerating] = useState(false);
 const [error, setError] = useState<string | null>(null);
 const [autosave, setAutosave] = useState<AutosaveState>("idle");
 const [toast, setToast] = useState<string | null>(null);
+
+async function handleGenerateDescription() {
+const form = formRef.current;
+if (!form) return;
+setGenerating(true);
+const fields = readVehicleFieldsFromForm(form);
+try {
+const res = await fetch("/api/listings/generate-description", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify(fields),
+});
+const data = res.ok ? await res.json() : null;
+const description = data?.description ?? generateListingDescription(fields);
+if (descriptionRef.current) descriptionRef.current.value = description;
+} catch {
+if (descriptionRef.current) descriptionRef.current.value = generateListingDescription(fields);
+} finally {
+setGenerating(false);
+handleFieldChange(); // schedule autosave the same as if the dealer had typed it
+}
+}
 
 useEffect(() => {
 statusRef.current = status;
@@ -326,10 +351,23 @@ One owner
 </div>
 
 <div className="dl-card dl-field">
+<div className="flex items-center justify-between gap-3">
 <label htmlFor="description" className="dl-label">
 Description
 </label>
+<button
+type="button"
+onClick={handleGenerateDescription}
+disabled={generating}
+className="dl-btn dl-btn--ghost"
+style={{ padding: "4px 10px", fontSize: 13 }}
+>
+{generating && <DlLoader />}
+{generating ? "Generating…" : "Generate description"}
+</button>
+</div>
 <textarea
+ref={descriptionRef}
 id="description"
 name="description"
 rows={4}
