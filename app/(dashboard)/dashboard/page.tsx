@@ -41,7 +41,7 @@ export default async function DashboardOverview({
     .orderBy(desc(listings.createdAt));
 
   const ids = rows.map((l) => l.id);
-  const coverByListing = new Map<string, string>();
+  const photosByListing = new Map<string, string[]>();
   const facebookByListing = new Map<string, LotListing["facebook"]>();
   let facebookPostTimes: Date[] = [];
 
@@ -74,9 +74,11 @@ export default async function DashboardOverview({
         ),
     ]);
 
-    // First photo by sortOrder is the cover.
+    // Already in sortOrder, so the first photo per listing is its cover.
     for (const photo of photos) {
-      if (!coverByListing.has(photo.listingId)) coverByListing.set(photo.listingId, photo.url);
+      const list = photosByListing.get(photo.listingId) ?? [];
+      list.push(photo.url);
+      photosByListing.set(photo.listingId, list);
     }
     // Same rule as the platforms status route: a pending post only counts
     // while its one-time token is still live.
@@ -89,23 +91,27 @@ export default async function DashboardOverview({
     facebookPostTimes = history.map((h) => h.createdAt);
   }
 
-  const lot: LotListing[] = rows.map((l) => ({
-    id: l.id,
-    year: l.year,
-    make: l.make,
-    model: l.model,
-    price: l.price,
-    mileage: l.mileage,
-    vin: l.vin,
-    bodyType: l.bodyType,
-    stockNumber: l.stockNumber,
-    cleanTitle: l.cleanTitle,
-    oneOwner: l.oneOwner,
-    status: l.status,
-    createdAt: l.createdAt,
-    coverUrl: coverByListing.get(l.id) ?? null,
-    facebook: facebookByListing.get(l.id) ?? null,
-  }));
+  const lot: LotListing[] = rows.map((l) => {
+    const photoUrls = photosByListing.get(l.id) ?? [];
+    return {
+      id: l.id,
+      year: l.year,
+      make: l.make,
+      model: l.model,
+      price: l.price,
+      mileage: l.mileage,
+      vin: l.vin,
+      bodyType: l.bodyType,
+      stockNumber: l.stockNumber,
+      cleanTitle: l.cleanTitle,
+      oneOwner: l.oneOwner,
+      status: l.status,
+      createdAt: l.createdAt,
+      photoUrls,
+      coverUrl: photoUrls[0] ?? null,
+      facebook: facebookByListing.get(l.id) ?? null,
+    };
+  });
   const stats = computeLotStats(lot, facebookPostTimes, now);
 
   return (
