@@ -10,6 +10,24 @@
 const PENDING_KEY = "dealerloft_pending_listing";
 const PENDING_TTL_MS = 5 * 60 * 1000; // 5 minutes — stale data is dropped, not filled in
 
+// Which Facebook tab belongs to the post in flight, and which DealerLoft tab
+// started it. Kept in storage rather than a variable because Chrome can stop
+// this service worker at any time between events.
+const TRACKED_KEY = "dealerloft_tracked_tabs";
+
+// If the dealer closes the Facebook tab before the post is reported as
+// published, tell the DealerLoft tab so it stops waiting and offers a retry.
+chrome.tabs.onRemoved.addListener((tabId) => {
+  chrome.storage.local.get(TRACKED_KEY, (result) => {
+    const tracked = result[TRACKED_KEY];
+    if (!tracked || tracked.facebookTabId !== tabId) return;
+    chrome.storage.local.remove(TRACKED_KEY);
+    chrome.tabs.sendMessage(tracked.dealerloftTabId, { type: "DEALERLOFT_FACEBOOK_TAB_CLOSED" }, () => {
+      void chrome.runtime.lastError; // DealerLoft tab already gone — nothing to tell
+    });
+  });
+});
+
 // Message payloads have to be JSON-serializable, so photo bytes travel to
 // the content script as base64. Chunked so String.fromCharCode doesn't blow
 // the argument limit on multi-megabyte photos.
@@ -22,7 +40,7 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "DEALERLOFT_POST_TO_MARKETPLACE") {
     const payload = {
       listing: message.listing,
@@ -31,7 +49,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       storedAt: Date.now(),
     };
     chrome.storage.local.set({ [PENDING_KEY]: payload }, () => {
-      chrome.tabs.create({ url: "https://www.facebook.com/marketplace/create/vehicle" });
+      chrome.tabs.create({ url: "https://www.facebook.com/marketplace/create/vehicle" }, (tab) => {
+        if (tab?.id != null && sender.tab?.id != null) {
+          chrome.storage.local.set({
+            [TRACKED_KEY]: { facebookTabId: tab.id, dealerloftTabId: sender.tab.id },
+          });
+        }
+      });
       sendResponse({ ok: true });
     });
     return true; // keep the message channel open for the async sendResponse
@@ -68,7 +92,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, externalUrl: externalUrl ?? null }),
     })
-      .then((res) => sendResponse({ ok: res.ok }))
+      .then((res) => {
+        // Posted — closing the Facebook tab from now on is not an abandon.
+        if (res.ok) chrome.storage.local.remove(TRACKED_KEY);
+        sendResponse({ ok: res.ok });
+      })
       .catch((err) => sendResponse({ ok: false, error: String(err) }));
     return true;
   }
