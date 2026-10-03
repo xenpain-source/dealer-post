@@ -356,6 +356,7 @@
     if (!fileInput) return { field: "photos", ok: false, note: "no photo upload field found on page" };
 
     let attached = 0;
+    let firstError = null;
     for (const url of urls.slice(0, 10)) {
       try {
         const blob = await fetchPhotoViaBackground(url);
@@ -369,13 +370,20 @@
         await wait(1200); // give Facebook's own uploader time before adding the next one
       } catch (err) {
         log("couldn't attach photo", url, err);
+        if (!firstError) {
+          let host = url;
+          try {
+            host = new URL(url).host;
+          } catch {}
+          firstError = `${host}: ${err?.message || err}`;
+        }
       }
     }
     if (attached === 0) {
       return {
         field: "photos",
         ok: false,
-        note: "couldn't download any photos to attach (likely blocked by the photo host) — add them manually",
+        note: `couldn't download any photos to attach (${firstError}) — add them manually`,
       };
     }
     return { field: "photos", ok: attached === urls.length, note: `${attached} of ${urls.length} attached` };
