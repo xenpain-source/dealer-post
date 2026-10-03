@@ -432,7 +432,7 @@
     return banner;
   }
 
-  function showSummary(results, watchingForPublish) {
+  function showSummary(results) {
     const ok = results.filter((r) => r.ok).length;
     const banner = showBanner(`DealerLoft filled ${ok} of ${results.length} fields.`);
     // Per-field results fold away to keep the banner short — but open on
@@ -454,9 +454,7 @@
 
     const status = document.createElement("div");
     status.style.cssText = "margin-top:10px;font-weight:400;font-size:13px;opacity:.85";
-    status.textContent = watchingForPublish
-      ? "Review the listing, then click Facebook's own Publish button — DealerLoft will notice on its own."
-      : "Review the listing, then click Facebook's own Publish button.";
+    status.textContent = "Review the listing, then click Facebook's own Publish button.";
     banner.appendChild(status);
 
     const row = document.createElement("div");
@@ -512,12 +510,11 @@
     results.push(await fillField("Description", KEYWORDS.description, buildDescription(listing)));
     if (listing.photoUrls?.length) results.push(await tryAttachPhotos(listing.photoUrls));
 
-    const canReport = Boolean(token && callbackUrl);
-    const status = showSummary(results, canReport);
+    const status = showSummary(results);
 
     // Report the publish exactly once — the token is single-use, so a second
     // report would be rejected and look like a failure.
-    if (canReport) {
+    if (token && callbackUrl) {
       let reported = false;
       watchForPublish(async (href) => {
         if (reported) return;
